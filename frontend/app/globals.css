@@ -3,8 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f1117;
-  --foreground: #e8eaf6;
+  --background: #f6f7fb;
+  --surface: #ffffff;
+  --surface-muted: #eef2f7;
+  --border: #d8dee9;
+  --foreground: #18202f;
+  --muted: #657083;
+  --accent: #0f766e;
+  --accent-strong: #115e59;
+  --success: #15803d;
+  --warning: #b45309;
+  --error: #b91c1c;
 }
 
 * {
@@ -16,4 +25,11 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
