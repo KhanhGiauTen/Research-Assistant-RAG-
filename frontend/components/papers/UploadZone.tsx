@@ -51,7 +51,7 @@ export function UploadZone({ disabled, onUpload }: UploadZoneProps) {
         <Upload className="h-6 w-6 text-[var(--accent)]" />
         <span className="mt-2 text-sm font-medium">Upload PDF papers</span>
         <span className="mt-1 text-xs text-[var(--muted)]">
-          Drag files here or click to select
+          Kéo thả file hoặc click để chọn
         </span>
       </button>
       <input

@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { IngestJob, PaperInfo } from "@/lib/types";
 
+export type UsePapersResult = ReturnType<typeof usePapers>;
+
 export function usePapers() {
   const [papers, setPapers] = useState<PaperInfo[]>([]);
   const [totalChunks, setTotalChunks] = useState(0);

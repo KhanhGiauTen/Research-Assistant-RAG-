@@ -4,10 +4,21 @@ import type {
   IngestJob,
   Message,
   PaperInfo,
+  PageTextResponse,
   SystemHealth,
 } from "@/lib/types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export function toApiUrl(path?: string | null): string | null {
+  if (!path) {
+    return null;
+  }
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+  return `${API_BASE}${path}`;
+}
 
 function assertOk(response: Response): Response {
   if (!response.ok) {
@@ -96,6 +107,13 @@ export const api = {
 
   async listPapers(): Promise<{ files: PaperInfo[]; total_chunks: number }> {
     const response = await fetch(`${API_BASE}/api/ingest/files`, {
+      cache: "no-store",
+    });
+    return assertOk(response).json();
+  },
+
+  async getPageText(url: string): Promise<PageTextResponse> {
+    const response = await fetch(toApiUrl(url) ?? url, {
       cache: "no-store",
     });
     return assertOk(response).json();

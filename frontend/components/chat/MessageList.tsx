@@ -8,9 +8,14 @@ import type { Message, SourceReference } from "@/lib/types";
 interface MessageListProps {
   messages: Message[];
   onShowSources: (sources: SourceReference[]) => void;
+  onSelectSource: (source: SourceReference) => void;
 }
 
-export function MessageList({ messages, onShowSources }: MessageListProps) {
+export function MessageList({
+  messages,
+  onSelectSource,
+  onShowSources,
+}: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -23,8 +28,8 @@ export function MessageList({ messages, onShowSources }: MessageListProps) {
         <div>
           <h2 className="text-2xl font-semibold">Start with a research question</h2>
           <p className="mt-2 max-w-md text-sm text-[var(--muted)]">
-            Upload and ingest PDFs, then ask for summaries, comparisons, or
-            citation-backed answers.
+            Upload PDF, hỏi bằng tiếng Việt hoặc English, rồi xem citation và
+            nguồn ngay ở panel bên phải.
           </p>
         </div>
       </div>
@@ -38,6 +43,7 @@ export function MessageList({ messages, onShowSources }: MessageListProps) {
           <MessageBubble
             key={message.id}
             message={message}
+            onSelectSource={onSelectSource}
             onShowSources={onShowSources}
           />
         ))}

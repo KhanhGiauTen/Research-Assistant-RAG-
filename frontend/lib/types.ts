@@ -7,17 +7,37 @@ export interface Message {
   timestamp: Date;
 }
 
+export interface HighlightRange {
+  start: number;
+  end: number;
+  kind: "query" | "answer" | string;
+}
+
 export interface SourceReference {
   rank: number;
+  citation_id: string;
+  chunk_id: string;
+  file_id: string;
   file_name: string;
+  display_title: string;
   page_number: number;
+  chunk_index: number;
+  section_name?: string | null;
   score: number;
+  quote: string;
+  context: string;
+  highlight_ranges: HighlightRange[];
+  pdf_url?: string | null;
+  page_text_url?: string | null;
   excerpt: string;
 }
 
 export interface PaperInfo {
+  file_id: string;
   file_name: string;
+  display_title: string;
   chunk_count: number;
+  pdf_url?: string | null;
 }
 
 export interface SystemHealth {
@@ -61,6 +81,14 @@ export interface ChatSession {
   created_at: string;
   last_active: string;
   filter_file?: string | null;
+}
+
+export interface PageTextResponse {
+  file_id: string;
+  file_name: string;
+  display_title: string;
+  page_number: number;
+  text: string;
 }
 
 export type StreamEvent =

@@ -13,7 +13,7 @@ export function PaperList({ papers, onDelete }: PaperListProps) {
   if (!papers.length) {
     return (
       <div className="rounded-md border border-[var(--border)] bg-white p-4 text-sm text-[var(--muted)]">
-        No indexed papers yet.
+        Chưa có paper nào được index.
       </div>
     );
   }
@@ -23,11 +23,12 @@ export function PaperList({ papers, onDelete }: PaperListProps) {
       {papers.map((paper) => (
         <div
           key={paper.file_name}
-          className="rounded-md border border-[var(--border)] bg-white p-3"
+          className="rounded-md border border-[var(--border)] bg-white p-3 shadow-sm"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <p className="break-words text-sm font-medium">{paper.file_name}</p>
+              <p className="break-words text-sm font-medium">{paper.display_title}</p>
+              <p className="break-words text-xs text-[var(--muted)]">{paper.file_name}</p>
               <p className="text-xs text-[var(--muted)]">{paper.chunk_count} chunks</p>
             </div>
             <button

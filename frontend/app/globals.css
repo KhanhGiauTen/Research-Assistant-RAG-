@@ -3,17 +3,22 @@
 @tailwind utilities;
 
 :root {
-  --background: #f6f7fb;
+  --background: #f6fafd;
   --surface: #ffffff;
-  --surface-muted: #eef2f7;
-  --border: #d8dee9;
-  --foreground: #18202f;
-  --muted: #657083;
-  --accent: #0f766e;
-  --accent-strong: #115e59;
-  --success: #15803d;
-  --warning: #b45309;
-  --error: #b91c1c;
+  --surface-muted: #eef7fa;
+  --border: #d7e7ef;
+  --foreground: #17324d;
+  --muted: #62748a;
+  --accent: #2f80a7;
+  --accent-strong: #256b8d;
+  --accent-cyan: #bdecf4;
+  --accent-indigo: #dde7ff;
+  --accent-mint: #ddf7ea;
+  --success: #157a55;
+  --warning: #947122;
+  --error: #b74242;
+  --warning-soft: #fff3c4;
+  --error-soft: #ffe1e1;
 }
 
 * {
@@ -24,7 +29,7 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Inter, Arial, Helvetica, sans-serif;
 }
 
 button,
@@ -32,4 +37,21 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+::selection {
+  background: var(--accent-cyan);
+  color: var(--foreground);
+}
+
+.react-pdf__Page {
+  display: flex;
+  justify-content: center;
+}
+
+.react-pdf__Page canvas {
+  max-width: 100%;
+  height: auto !important;
+  border-radius: 6px;
+  box-shadow: 0 18px 40px rgb(23 50 77 / 12%);
 }

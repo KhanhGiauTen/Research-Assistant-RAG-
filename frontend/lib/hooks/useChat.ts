@@ -41,6 +41,7 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [activeSources, setActiveSources] = useState<SourceReference[]>([]);
+  const [selectedSource, setSelectedSource] = useState<SourceReference | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -152,6 +153,7 @@ export function useChat() {
               }));
             } else if (event.type === "sources") {
               setActiveSources(event.sources);
+              setSelectedSource(event.sources[0] ?? null);
               updateAssistant(assistantId, (message) => ({
                 ...message,
                 sources: event.sources,
@@ -199,6 +201,7 @@ export function useChat() {
     });
     setMessages([]);
     setActiveSources([]);
+    setSelectedSource(null);
   }, [sessionId]);
 
   return {
@@ -210,6 +213,8 @@ export function useChat() {
     setSelectedFile,
     activeSources,
     setActiveSources,
+    selectedSource,
+    setSelectedSource,
     sessionId,
   };
 }

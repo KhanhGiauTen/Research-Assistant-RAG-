@@ -47,10 +47,10 @@ export function InputBar({
           value={selectedFile ?? ""}
           onChange={(event) => onSelectedFileChange(event.target.value || null)}
         >
-          <option value="">All papers</option>
+          <option value="">Tất cả papers</option>
           {papers.map((paper) => (
             <option key={paper.file_name} value={paper.file_name}>
-              {paper.file_name}
+              {paper.display_title || paper.file_name}
             </option>
           ))}
         </select>
@@ -67,7 +67,7 @@ export function InputBar({
           maxLength={1000}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={onKeyDown}
-          placeholder="Ask about your indexed papers..."
+          placeholder="Hỏi về paper đã index... / Ask about your indexed papers..."
           value={value}
         />
         <button
@@ -80,7 +80,7 @@ export function InputBar({
           <Send className="h-5 w-5" />
         </button>
       </div>
-      <p className="mt-2 text-xs text-[var(--muted)]">Ctrl/Command + Enter to send</p>
+      <p className="mt-2 text-xs text-[var(--muted)]">Ctrl/Command + Enter để gửi</p>
     </div>
   );
 }
