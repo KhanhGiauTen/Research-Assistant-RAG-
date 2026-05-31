@@ -1,67 +1,30 @@
-# Local RAG System for Obsidian Vault
+# Local Research Assistant RAG
 
-## Giới thiệu
-Dự án này cung cấp một hệ thống truy vấn tài liệu nghiên cứu cá nhân dựa trên kiến trúc Retrieval-Augmented Generation (RAG). Ứng dụng hoạt động hoàn toàn trên môi trường cục bộ (local) nhằm bảo đảm tính bảo mật của dữ liệu. Khung phần mềm sử dụng LangChain để trích xuất, xử lý dữ liệu từ Obsidian Vault và kết nối với các mô hình ngôn ngữ lớn (LLMs).
+Chatbot RAG cho paper PDF chạy trên máy cá nhân với chi phí API bằng 0. Dữ liệu không cần gửi ra dịch vụ trả phí: PDF được parse local, embedding chạy bằng `sentence-transformers`, vector store lưu bằng ChromaDB, và phần sinh câu trả lời dùng Ollama.
 
-## Kiến trúc hệ thống
-1. **Nguồn dữ liệu:** Obsidian Vault (các tệp `.md`).
-2. **Khung điều phối (Orchestration):** LangChain.
-3. **Phân tách văn bản (Chunking):** Kết hợp `MarkdownHeaderTextSplitter` và `RecursiveCharacterTextSplitter` để bảo toàn ngữ cảnh học thuật theo cấu trúc tiêu đề.
-4. **Mô hình nhúng (Embedding Model):** `BAAI/bge-m3` thông qua thư viện HuggingFace, tối ưu hóa cho xử lý đa ngôn ngữ và từ vựng chuyên ngành.
-5. **Cơ sở dữ liệu Vector (Vector Database):** ChromaDB (lưu trữ và truy xuất cục bộ).
-6. **Mô hình ngôn ngữ (LLM):** Triển khai cục bộ thông qua Ollama (khuyến nghị Llama-3 8B hoặc Qwen-1.5).
+## Kiến trúc
 
-## Yêu cầu môi trường
-* Python 3.10 trở lên.
-* Ollama đã được cài đặt và tải sẵn mô hình LLM.
-* Môi trường Python được cài đặt các gói phụ thuộc.
-
-### Danh sách các thư viện (requirements.txt)
 ```text
-langchain
-langchain-community
-langchain-huggingface
-langchain-text-splitters
-chromadb
-sentence-transformers
+backend/data/papers     -> PDF local
+backend/app/ingestion   -> parse PDF, chunk, embed
+backend/app/retrieval   -> ChromaDB persistent retrieval
+backend/app/generation  -> Ollama LLM client
+backend/app/api         -> FastAPI endpoints
+frontend                -> Next.js chat UI
 ```
 
-## Cài đặt và triển khai
+## Trạng thái
 
-1. **Thiết lập môi trường ảo và cài đặt thư viện:**
-```bash
-python -m venv venv
-# Trên Linux/macOS
-source venv/bin/activate  
-# Trên Windows
-venv\Scripts\activate
+Project được triển khai theo phase:
 
-pip install -r requirements.txt
-```
+1. Project setup và cấu hình local-first.
+2. Ingestion pipeline cho PDF.
+3. ChromaDB vector store.
+4. Ollama generation.
+5. FastAPI RAG API.
+6. Next.js frontend.
+7. Polish, tests, và setup guide.
 
-2. **Cấu hình đường dẫn dữ liệu:**
-Chỉnh sửa biến `vault_path` trong tệp mã nguồn chính (ví dụ `main.py`) để trỏ đến thư mục Obsidian Vault trên máy tính:
-```python
-vault_path = "/path/to/your/obsidian/vault"
-```
+## Quick start
 
-3. **Khởi chạy mô hình Ollama:**
-Đảm bảo dịch vụ Ollama đang hoạt động và có sẵn mô hình được định nghĩa trong mã nguồn:
-```bash
-ollama run llama3
-```
-
-4. **Thực thi luồng truy vấn:**
-Lần chạy đầu tiên sẽ tiêu tốn tài nguyên hệ thống để khởi tạo ChromaDB và nhúng vector (embedding) toàn bộ tài liệu trong Vault.
-```bash
-python main.py
-```
-
-## Hướng phát triển và tối ưu
-* **Tích hợp Graph RAG:** Tối ưu hóa truy xuất bằng cách kết hợp đồ thị tri thức để khai thác các liên kết hai chiều (bidirectional links) bên trong Obsidian.
-* **Mở rộng định dạng tệp:** Xây dựng luồng tiền xử lý (preprocessing pipeline) để trích xuất nội dung từ các tệp PDF đính kèm trong Vault sang định dạng Markdown.
-
-## Tài liệu tham khảo
-1. Lewis, P., et al. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. *Advances in Neural Information Processing Systems*, 33, 9459-9474.
-2. Edge, C., et al. (2024). From Local to Global: A Graph RAG Approach to Query-Focused Summarization. *arXiv preprint arXiv:2404.16130*.
-3. Wang, Y., et al. (2023). BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation. *arXiv preprint arXiv:2402.03216*.
+Xem `SETUP.md` sau khi các phase hoàn tất để chạy đầy đủ backend, frontend và Ollama. PDF nghiên cứu đặt trong `backend/data/papers`; thư mục này được ignore để tránh commit dữ liệu cá nhân.
