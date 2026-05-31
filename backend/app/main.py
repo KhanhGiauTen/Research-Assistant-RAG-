@@ -7,7 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import chat, ingest
+from app.api import chat, files, ingest, sources
 from app.config import settings
 from app.generation.llm_client import check_ollama_health
 from app.ingestion.embedder import get_embedding_model
@@ -63,3 +63,5 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 
 app.include_router(ingest.router, prefix="/api/ingest", tags=["ingestion"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+app.include_router(files.router, prefix="/api/files", tags=["files"])
+app.include_router(sources.router, prefix="/api/sources", tags=["sources"])

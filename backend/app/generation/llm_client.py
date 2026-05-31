@@ -9,6 +9,7 @@ from ollama import AsyncClient
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.retrieval.evidence import SourceReference, build_source_references
 from app.retrieval.retriever import format_context
 from app.retrieval.retriever_models import RetrievedChunk
 
@@ -22,25 +23,19 @@ Your task is to answer questions based ONLY on the provided context from researc
 Rules:
 1. Answer based strictly on the context provided. Do not use prior knowledge.
 2. If the context doesn't contain enough information, say "Based on the provided papers, I cannot find sufficient information about this."
-3. Always cite your sources using [Source N] notation when referencing specific information.
-4. Be precise and academic in tone.
-5. If asked to summarize or compare, synthesize across multiple sources.
-6. Point out if sources contradict each other.
+3. Always cite important claims using [N] citation notation from the provided context.
+4. Answer in the same language as the user's question. If the question mixes Vietnamese and English, prefer Vietnamese while preserving technical terms.
+5. Use this structure when possible: short summary, details, key sources, limitations.
+6. Be precise and academic in tone.
+7. If asked to summarize or compare, synthesize across multiple sources.
+8. Point out if sources contradict each other.
 
-Context format: Each source is labeled [Source N] with file name and page number."""
+Context format: Each source is labeled [N] with file name and page number."""
 
 
 class Message(BaseModel):
     role: Literal["user", "assistant", "system"]
     content: str
-
-
-class SourceReference(BaseModel):
-    rank: int
-    file_name: str
-    page_number: int
-    score: float
-    excerpt: str
 
 
 class GenerationRequest(BaseModel):
@@ -62,26 +57,6 @@ class GenerationResponse(BaseModel):
 
 def get_ollama_client() -> AsyncClient:
     return AsyncClient(host=settings.ollama_base_url)
-
-
-def _source_excerpt(text: str, max_chars: int = 150) -> str:
-    collapsed = " ".join(text.split())
-    if len(collapsed) <= max_chars:
-        return collapsed
-    return f"{collapsed[:max_chars].rstrip()}..."
-
-
-def build_source_references(chunks: list[RetrievedChunk]) -> list[SourceReference]:
-    return [
-        SourceReference(
-            rank=chunk.rank,
-            file_name=chunk.metadata.file_name,
-            page_number=chunk.metadata.page_number,
-            score=chunk.score,
-            excerpt=_source_excerpt(chunk.text),
-        )
-        for chunk in chunks
-    ]
 
 
 def build_rag_prompt(
@@ -145,7 +120,7 @@ async def generate(request: GenerationRequest) -> GenerationResponse:
 
     return GenerationResponse(
         answer=response.message.content or "",
-        sources=build_source_references(request.context_chunks),
+        sources=build_source_references(request.context_chunks, request.query),
         model=response.model or settings.ollama_model,
         prompt_tokens=response.prompt_eval_count,
         completion_tokens=response.eval_count,
@@ -177,15 +152,6 @@ async def generate_stream(
             if token:
                 yield json.dumps({"type": "token", "content": token})
 
-        yield json.dumps(
-            {
-                "type": "sources",
-                "sources": [
-                    source.model_dump()
-                    for source in build_source_references(request.context_chunks)
-                ],
-            }
-        )
         yield json.dumps({"type": "done"})
     except Exception as exc:
         logger.exception("Ollama streaming generation failed")

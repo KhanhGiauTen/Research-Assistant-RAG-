@@ -10,6 +10,16 @@ from app.retrieval.retriever_models import RetrievedChunk, RetrievalResult
 from app.retrieval.vector_store import get_collection
 
 
+REFERENCE_QUERY_TERMS = {
+    "reference",
+    "references",
+    "bibliography",
+    "citation",
+    "citations",
+    "tài liệu tham khảo",
+}
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -17,6 +27,31 @@ def _distance_to_score(distance: float | None) -> float:
     if distance is None:
         return 0.0
     return max(0.0, min(1.0, 1.0 - float(distance)))
+
+
+def _query_tokens(query: str) -> set[str]:
+    return {
+        token
+        for token in "".join(
+            char.lower() if char.isalnum() else " "
+            for char in query
+        ).split()
+        if len(token) >= 3
+    }
+
+
+def _lexical_boost(query: str, text: str) -> float:
+    tokens = _query_tokens(query)
+    if not tokens:
+        return 0.0
+    lowered = text.lower()
+    hits = sum(1 for token in tokens if token in lowered)
+    return min(0.18, (hits / len(tokens)) * 0.18)
+
+
+def _asks_about_references(query: str) -> bool:
+    lowered = query.lower()
+    return any(term in lowered for term in REFERENCE_QUERY_TERMS)
 
 
 def retrieve(
@@ -60,12 +95,15 @@ def retrieve(
         distances,
         strict=False,
     ):
-        score = _distance_to_score(distance)
+        score = min(
+            1.0,
+            _distance_to_score(distance) + _lexical_boost(cleaned_query, text),
+        )
         if score < score_threshold:
             continue
 
         parsed_metadata = ChunkMetadata.model_validate(metadata)
-        if parsed_metadata.is_reference:
+        if parsed_metadata.is_reference and not _asks_about_references(cleaned_query):
             continue
 
         chunks.append(
@@ -78,7 +116,18 @@ def retrieve(
             )
         )
 
-    ranked_chunks = sorted(chunks, key=lambda chunk: chunk.score, reverse=True)[:top_k]
+    ranked_chunks: list[RetrievedChunk] = []
+    seen_pages: set[tuple[str, int]] = set()
+    for chunk in sorted(chunks, key=lambda item: item.score, reverse=True):
+        page_key = (chunk.metadata.file_name, chunk.metadata.page_number)
+        if page_key in seen_pages and len(ranked_chunks) < top_k:
+            lower_bound = ranked_chunks[-1].score - 0.03 if ranked_chunks else 0.0
+            if chunk.score < lower_bound:
+                continue
+        ranked_chunks.append(chunk)
+        seen_pages.add(page_key)
+        if len(ranked_chunks) >= top_k:
+            break
     for rank, chunk in enumerate(ranked_chunks, start=1):
         chunk.rank = rank
 
@@ -105,7 +154,7 @@ def format_context(chunks: list[RetrievedChunk]) -> str:
             "\n".join(
                 [
                     (
-                        f"[Source {chunk.rank}] {chunk.metadata.file_name} - "
+                        f"[{chunk.rank}] {chunk.metadata.file_name} - "
                         f"Page {chunk.metadata.page_number} "
                         f"(relevance: {chunk.score:.0%})"
                     ),

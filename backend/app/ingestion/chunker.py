@@ -8,6 +8,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel
 
 from app.config import settings
+from app.documents import file_id_for_path
 from app.ingestion.pdf_parser import ParsedDocument
 
 
@@ -22,6 +23,7 @@ EQUATION_RE = re.compile(r"[=∑∏√≤≥≈≠±]|\\(?:alpha|beta|gamma|sum|
 
 
 class ChunkMetadata(BaseModel):
+    file_id: str | None = None
     file_name: str
     file_path: str
     page_number: int
@@ -78,6 +80,7 @@ def smart_chunk_document(
     splitter = _build_splitter(chunk_size, chunk_overlap)
     chunks: list[TextChunk] = []
     current_section: str | None = None
+    file_id = file_id_for_path(document.file_path)
 
     for page in document.pages:
         current_section = _detect_section(page.text, current_section)
@@ -95,6 +98,7 @@ def smart_chunk_document(
                     chunk_id=chunk_id,
                     text=text,
                     metadata=ChunkMetadata(
+                        file_id=file_id,
                         file_name=document.file_name,
                         file_path=document.file_path,
                         page_number=page.page_number,

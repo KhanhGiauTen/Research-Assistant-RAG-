@@ -10,6 +10,7 @@ from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.documents import display_title_for_file, fallback_file_id, file_id_for_path
 from app.ingestion.chunker import chunk_document
 from app.ingestion.embedder import embed_chunks
 from app.ingestion.pdf_parser import parse_pdf
@@ -40,8 +41,11 @@ class JobStatus(BaseModel):
 
 
 class FileInfo(BaseModel):
+    file_id: str
     file_name: str
+    display_title: str
     chunk_count: int
+    pdf_url: str | None = None
 
 
 class IndexedFilesResponse(BaseModel):
@@ -164,13 +168,21 @@ async def get_job_status(job_id: str) -> JobStatus:
 @router.get("/files", response_model=IndexedFilesResponse)
 async def list_files() -> IndexedFilesResponse:
     stats = get_collection_stats()
-    return IndexedFilesResponse(
-        files=[
-            FileInfo(file_name=file_name, chunk_count=count)
-            for file_name, count in stats.chunks_per_file.items()
-        ],
-        total_chunks=stats.total_chunks,
-    )
+    files: list[FileInfo] = []
+    for file_name, count in stats.chunks_per_file.items():
+        path = (settings.papers_path / Path(file_name).name).resolve()
+        file_id = file_id_for_path(path) if path.exists() else fallback_file_id(file_name)
+        files.append(
+            FileInfo(
+                file_id=file_id,
+                file_name=file_name,
+                display_title=display_title_for_file(file_name),
+                chunk_count=count,
+                pdf_url=f"/api/files/{file_id}/pdf" if path.exists() else None,
+            )
+        )
+
+    return IndexedFilesResponse(files=files, total_chunks=stats.total_chunks)
 
 
 @router.delete("/files/{file_name:path}", response_model=DeleteFileResponse)

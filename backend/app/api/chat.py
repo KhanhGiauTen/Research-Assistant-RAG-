@@ -16,11 +16,11 @@ from app.generation.llm_client import (
     GenerationRequest,
     Message,
     SourceReference,
-    build_source_references,
     check_ollama_health,
     generate,
     generate_stream,
 )
+from app.retrieval.evidence import build_source_references
 from app.retrieval.retriever import retrieve
 from app.retrieval.vector_store import get_collection_stats
 
@@ -168,7 +168,7 @@ async def chat_query(request: ChatRequest) -> ChatResponse:
         _append_to_session(request.session_id, request.query, answer, request.filter_file)
         return ChatResponse(
             answer=answer,
-            sources=build_source_references(retrieval.chunks),
+            sources=build_source_references(retrieval.chunks, request.query),
             query=request.query,
             retrieved_chunks=retrieval.total_retrieved,
         )
@@ -224,8 +224,10 @@ async def stream_generator(request: ChatRequest) -> AsyncGenerator[str, None]:
 
         health = await check_ollama_health()
         sources = [
-            source.model_dump() for source in build_source_references(retrieval.chunks)
+            source.model_dump()
+            for source in build_source_references(retrieval.chunks, request.query)
         ]
+        yield _sse({"type": "sources", "sources": sources})
         if not health["available"] or not health["model_loaded"]:
             answer = (
                 "LLM unavailable - showing retrieved passages only. "
@@ -237,7 +239,6 @@ async def stream_generator(request: ChatRequest) -> AsyncGenerator[str, None]:
                     "content": answer,
                 }
             )
-            yield _sse({"type": "sources", "sources": sources})
             yield _sse({"type": "done"})
             _append_to_session(request.session_id, request.query, answer, request.filter_file)
             return
@@ -324,11 +325,12 @@ def _export_markdown(messages: list[ExportMessage]) -> str:
             for source in message.sources:
                 sections.append(
                     (
-                        f"- {source.file_name}, Page {source.page_number} "
+                        f"- {source.citation_id} {source.display_title}, "
+                        f"Page {source.page_number} "
                         f"(relevance: {source.score:.0%})"
                     )
                 )
-                sections.append(f"  > {source.excerpt}")
+                sections.append(f"  > {source.quote}")
         sections.append("---")
 
     return "\n".join(sections)
