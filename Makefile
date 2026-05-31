@@ -17,5 +17,11 @@ ingest:
 test:
 	backend\.venv\Scripts\python.exe -m pytest backend\tests -v
 
+lint-frontend:
+	cd frontend && npm run lint
+
+build-frontend:
+	cd frontend && npm run build
+
 clean:
 	powershell -NoProfile -Command "Get-ChildItem -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force"

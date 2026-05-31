@@ -29,6 +29,14 @@ Project được triển khai theo phase:
 
 Xem `SETUP.md` để chạy đầy đủ backend, frontend và Ollama. PDF nghiên cứu đặt trong `backend/data/papers`; thư mục này được ignore để tránh commit dữ liệu cá nhân.
 
+Trên Windows, đường nhanh nhất:
+
+```powershell
+.\scripts\setup_local.ps1 -InstallMissingTools
+.\scripts\start_local.ps1
+.\scripts\check_local.ps1
+```
+
 Lệnh kiểm thử backend:
 
 ```powershell

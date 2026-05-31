@@ -10,6 +10,22 @@ This project runs locally with no paid API. The first embedding run downloads `a
 
 ## Backend
 
+Fast path on Windows:
+
+```powershell
+.\scripts\setup_local.ps1 -InstallMissingTools
+.\scripts\start_local.ps1
+.\scripts\check_local.ps1
+```
+
+Stop backend/frontend processes started by the script:
+
+```powershell
+.\scripts\stop_local.ps1
+```
+
+Manual backend setup:
+
 ```powershell
 cd backend
 py -3.11 -m venv .venv
@@ -36,6 +52,8 @@ ollama pull llama3.2:3b
 
 If Ollama is not running, the API still works in degraded mode and returns retrieved sources without generated answers.
 
+The setup script pulls `llama3.2:3b` automatically unless you pass `-SkipModelPull`.
+
 ## Papers and Ingestion
 
 Put local PDFs in:
@@ -56,6 +74,9 @@ Then ingest:
 cd frontend
 npm install
 Copy-Item .env.local.example .env.local
+npm audit --audit-level=moderate
+npm run lint
+npm run build
 npm run dev
 ```
 
