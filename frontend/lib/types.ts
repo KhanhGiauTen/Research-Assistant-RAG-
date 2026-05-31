@@ -52,6 +52,17 @@ export interface ChatResponse {
   retrieved_chunks: number;
 }
 
+export interface ChatSession {
+  session_id: string;
+  messages: Array<{
+    role: "user" | "assistant" | "system";
+    content: string;
+  }>;
+  created_at: string;
+  last_active: string;
+  filter_file?: string | null;
+}
+
 export type StreamEvent =
   | { type: "token"; content: string }
   | { type: "sources"; sources: SourceReference[] }

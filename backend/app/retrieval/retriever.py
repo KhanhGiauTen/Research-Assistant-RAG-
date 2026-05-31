@@ -2,29 +2,15 @@ from __future__ import annotations
 
 import logging
 
-from pydantic import BaseModel, Field
-
 from app.config import settings
 from app.ingestion.chunker import ChunkMetadata
 from app.ingestion.embedder import embed_text
+from app.retrieval.cache import query_cache
+from app.retrieval.retriever_models import RetrievedChunk, RetrievalResult
 from app.retrieval.vector_store import get_collection
 
 
 logger = logging.getLogger(__name__)
-
-
-class RetrievedChunk(BaseModel):
-    chunk_id: str
-    text: str
-    score: float
-    metadata: ChunkMetadata
-    rank: int
-
-
-class RetrievalResult(BaseModel):
-    query: str
-    chunks: list[RetrievedChunk] = Field(default_factory=list)
-    total_retrieved: int
 
 
 def _distance_to_score(distance: float | None) -> float:
@@ -42,6 +28,11 @@ def retrieve(
     cleaned_query = query.strip()
     if not cleaned_query:
         return RetrievalResult(query=query, chunks=[], total_retrieved=0)
+
+    cached = query_cache.get(cleaned_query, top_k, filter_file)
+    if cached is not None:
+        logger.info("Retrieval cache hit for query=%r", cleaned_query)
+        return cached
 
     collection = get_collection()
     if collection.count() == 0:
@@ -73,12 +64,16 @@ def retrieve(
         if score < score_threshold:
             continue
 
+        parsed_metadata = ChunkMetadata.model_validate(metadata)
+        if parsed_metadata.is_reference:
+            continue
+
         chunks.append(
             RetrievedChunk(
                 chunk_id=chunk_id,
                 text=text,
                 score=score,
-                metadata=ChunkMetadata.model_validate(metadata),
+                metadata=parsed_metadata,
                 rank=0,
             )
         )
@@ -93,11 +88,13 @@ def retrieve(
         cleaned_query,
         filter_file,
     )
-    return RetrievalResult(
+    retrieval_result = RetrievalResult(
         query=cleaned_query,
         chunks=ranked_chunks,
         total_retrieved=len(ranked_chunks),
     )
+    query_cache.set(cleaned_query, top_k, filter_file, retrieval_result)
+    return retrieval_result
 
 
 def format_context(chunks: list[RetrievedChunk]) -> str:

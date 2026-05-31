@@ -13,6 +13,7 @@ from app.config import settings
 from app.ingestion.chunker import chunk_document
 from app.ingestion.embedder import embed_chunks
 from app.ingestion.pdf_parser import parse_pdf
+from app.retrieval.cache import query_cache
 from app.retrieval.vector_store import delete_file, get_collection_stats, upsert_chunks
 
 
@@ -98,6 +99,7 @@ def ingest_files(file_paths: list[str], job_id: str) -> None:
 
             job.progress = f"Indexing {path.name}..."
             result = upsert_chunks(chunks_with_embeddings)
+            query_cache.invalidate_all()
             total_chunks += result.inserted + result.updated
             job.chunks_indexed = total_chunks
 
@@ -178,6 +180,8 @@ async def delete_indexed_file(
 ) -> DeleteFileResponse:
     safe_name = Path(file_name).name
     chunks_removed = delete_file(safe_name)
+    if chunks_removed:
+        query_cache.invalidate_all()
     file_deleted = False
 
     if delete_from_disk:

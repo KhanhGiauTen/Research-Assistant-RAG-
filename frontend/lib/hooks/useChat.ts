@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
 import type { Message, SourceReference, StreamEvent } from "@/lib/types";
+
+const SESSION_STORAGE_KEY = "research-rag-session-id";
 
 function createId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
@@ -39,6 +41,47 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [activeSources, setActiveSources] = useState<SourceReference[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSession() {
+      const stored = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (stored) {
+        try {
+          const session = await api.getSession(stored);
+          if (!cancelled) {
+            setSessionId(session.session_id);
+            setMessages(
+              session.messages
+                .filter((message) => message.role === "user" || message.role === "assistant")
+                .map((message) => ({
+                  id: createId(),
+                  role: message.role as "user" | "assistant",
+                  content: message.content,
+                  timestamp: new Date(session.last_active),
+                })),
+            );
+            return;
+          }
+        } catch {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        }
+      }
+
+      const session = await api.createSession();
+      if (!cancelled) {
+        setSessionId(session.session_id);
+        localStorage.setItem(SESSION_STORAGE_KEY, session.session_id);
+      }
+    }
+
+    void loadSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const updateAssistant = useCallback(
     (
@@ -81,7 +124,12 @@ export function useChat() {
       setIsLoading(true);
 
       try {
-        const stream = await api.chatStream(trimmed, messages, selectedFile);
+        const stream = await api.chatStream(
+          trimmed,
+          messages,
+          selectedFile,
+          sessionId,
+        );
         const reader = stream.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
@@ -138,13 +186,20 @@ export function useChat() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, selectedFile, updateAssistant],
+    [isLoading, messages, selectedFile, sessionId, updateAssistant],
   );
 
   const clearHistory = useCallback(() => {
+    if (sessionId) {
+      void api.deleteSession(sessionId);
+    }
+    void api.createSession().then((session) => {
+      setSessionId(session.session_id);
+      localStorage.setItem(SESSION_STORAGE_KEY, session.session_id);
+    });
     setMessages([]);
     setActiveSources([]);
-  }, []);
+  }, [sessionId]);
 
   return {
     messages,
@@ -155,5 +210,6 @@ export function useChat() {
     setSelectedFile,
     activeSources,
     setActiveSources,
+    sessionId,
   };
 }

@@ -21,7 +21,7 @@ from app.generation.llm_client import (  # noqa: E402
     generate_stream,
 )
 from app.ingestion.chunker import ChunkMetadata  # noqa: E402
-from app.retrieval.retriever import RetrievedChunk  # noqa: E402
+from app.retrieval.retriever_models import RetrievedChunk  # noqa: E402
 
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")

@@ -9,6 +9,8 @@ from fastapi.responses import JSONResponse
 
 from app.api import chat, ingest
 from app.config import settings
+from app.generation.llm_client import check_ollama_health
+from app.ingestion.embedder import get_embedding_model
 
 
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +20,18 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting Local Research Assistant API")
+    try:
+        logger.info("Warming up embedding model: %s", settings.embedding_model)
+        get_embedding_model()
+    except Exception as exc:
+        logger.warning("Embedding model warmup failed: %s", exc)
+
+    health = await check_ollama_health()
+    if not health["available"]:
+        logger.warning("Ollama is unavailable at startup: %s", health["error"])
+    elif not health["model_loaded"]:
+        logger.warning("Ollama model is not pulled yet: %s", settings.ollama_model)
+
     yield
     logger.info("Stopping Local Research Assistant API")
 

@@ -1,17 +1,31 @@
 "use client";
 
-import { RotateCcw } from "lucide-react";
+import { Download, RotateCcw } from "lucide-react";
 
 import { InputBar } from "@/components/chat/InputBar";
 import { MessageList } from "@/components/chat/MessageList";
 import { SourcePanel } from "@/components/chat/SourcePanel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { api } from "@/lib/api";
 import { useChat } from "@/lib/hooks/useChat";
 import { usePapers } from "@/lib/hooks/usePapers";
 
 export function ChatWindow() {
   const chat = useChat();
   const { papers } = usePapers();
+
+  async function exportChat() {
+    if (!chat.messages.length) {
+      return;
+    }
+    const blob = await api.exportChat(chat.messages, "markdown");
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "research-chat.md";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
     <section className="flex min-h-screen flex-col border-r border-[var(--border)] bg-[var(--surface)]">
@@ -24,6 +38,16 @@ export function ChatWindow() {
         </div>
         <div className="flex items-center gap-2">
           <StatusBadge />
+          <button
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--border)] px-3 text-sm hover:bg-[var(--surface-muted)] disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!chat.messages.length}
+            onClick={() => void exportChat()}
+            title="Export chat"
+            type="button"
+          >
+            <Download className="h-4 w-4" />
+            Export
+          </button>
           <button
             className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--border)] px-3 text-sm hover:bg-[var(--surface-muted)]"
             onClick={chat.clearHistory}

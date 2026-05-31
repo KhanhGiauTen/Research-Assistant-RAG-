@@ -9,7 +9,8 @@ from ollama import AsyncClient
 from pydantic import BaseModel, Field
 
 from app.config import settings
-from app.retrieval.retriever import RetrievedChunk, format_context
+from app.retrieval.retriever import format_context
+from app.retrieval.retriever_models import RetrievedChunk
 
 
 logger = logging.getLogger(__name__)

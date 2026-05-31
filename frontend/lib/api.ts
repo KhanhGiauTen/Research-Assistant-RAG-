@@ -1,5 +1,6 @@
 import type {
   ChatResponse,
+  ChatSession,
   IngestJob,
   Message,
   PaperInfo,
@@ -36,6 +37,7 @@ export const api = {
     query: string,
     history: Message[],
     filterFile?: string | null,
+    sessionId?: string | null,
   ): Promise<ChatResponse> {
     const response = await fetch(`${API_BASE}/api/chat/query`, {
       method: "POST",
@@ -43,6 +45,7 @@ export const api = {
       body: JSON.stringify({
         query,
         conversation_history: toBackendHistory(history),
+        session_id: sessionId || null,
         filter_file: filterFile || null,
       }),
     });
@@ -53,6 +56,7 @@ export const api = {
     query: string,
     history: Message[],
     filterFile?: string | null,
+    sessionId?: string | null,
   ): Promise<ReadableStream<Uint8Array>> {
     const response = await fetch(`${API_BASE}/api/chat/stream`, {
       method: "POST",
@@ -60,6 +64,7 @@ export const api = {
       body: JSON.stringify({
         query,
         conversation_history: toBackendHistory(history),
+        session_id: sessionId || null,
         filter_file: filterFile || null,
       }),
     });
@@ -102,5 +107,45 @@ export const api = {
       { method: "DELETE" },
     );
     assertOk(response);
+  },
+
+  async createSession(): Promise<ChatSession> {
+    const response = await fetch(`${API_BASE}/api/chat/sessions`, {
+      method: "POST",
+    });
+    return assertOk(response).json();
+  },
+
+  async getSession(sessionId: string): Promise<ChatSession> {
+    const response = await fetch(`${API_BASE}/api/chat/sessions/${sessionId}`, {
+      cache: "no-store",
+    });
+    return assertOk(response).json();
+  },
+
+  async deleteSession(sessionId: string): Promise<void> {
+    const response = await fetch(`${API_BASE}/api/chat/sessions/${sessionId}`, {
+      method: "DELETE",
+    });
+    assertOk(response);
+  },
+
+  async exportChat(
+    messages: Message[],
+    format: "markdown" | "json" | "txt" = "markdown",
+  ): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/api/chat/export`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        format,
+        messages: messages.map((message) => ({
+          role: message.role,
+          content: message.content,
+          sources: message.sources ?? [],
+        })),
+      }),
+    });
+    return assertOk(response).blob();
   },
 };

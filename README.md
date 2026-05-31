@@ -27,4 +27,10 @@ Project được triển khai theo phase:
 
 ## Quick start
 
-Xem `SETUP.md` sau khi các phase hoàn tất để chạy đầy đủ backend, frontend và Ollama. PDF nghiên cứu đặt trong `backend/data/papers`; thư mục này được ignore để tránh commit dữ liệu cá nhân.
+Xem `SETUP.md` để chạy đầy đủ backend, frontend và Ollama. PDF nghiên cứu đặt trong `backend/data/papers`; thư mục này được ignore để tránh commit dữ liệu cá nhân.
+
+Lệnh kiểm thử backend:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m pytest .\backend\tests -v
+```

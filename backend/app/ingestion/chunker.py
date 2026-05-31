@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 import logging
+import re
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel
@@ -12,6 +13,13 @@ from app.ingestion.pdf_parser import ParsedDocument
 
 logger = logging.getLogger(__name__)
 
+SECTION_HEADER_RE = re.compile(
+    r"^(abstract|introduction|related work|background|method|methods|methodology|"
+    r"experiments|results|discussion|conclusion|references)\b",
+    re.IGNORECASE,
+)
+EQUATION_RE = re.compile(r"[=∑∏√≤≥≈≠±]|\\(?:alpha|beta|gamma|sum|frac|theta)")
+
 
 class ChunkMetadata(BaseModel):
     file_name: str
@@ -20,6 +28,9 @@ class ChunkMetadata(BaseModel):
     chunk_index: int
     total_chunks_in_page: int
     char_count: int
+    section_name: str | None = None
+    is_reference: bool = False
+    has_equation: bool = False
 
 
 class TextChunk(BaseModel):
@@ -38,20 +49,44 @@ def _build_splitter(chunk_size: int, chunk_overlap: int) -> RecursiveCharacterTe
     )
 
 
+def _detect_section(text: str, current_section: str | None) -> str | None:
+    for line in text.splitlines():
+        stripped = line.strip().strip("0123456789. ")
+        match = SECTION_HEADER_RE.match(stripped)
+        if match:
+            return match.group(1).title()
+    return current_section
+
+
+def _has_equation(text: str) -> bool:
+    return bool(EQUATION_RE.search(text))
+
+
 def chunk_document(
+    document: ParsedDocument,
+    chunk_size: int = settings.chunk_size,
+    chunk_overlap: int = settings.chunk_overlap,
+) -> list[TextChunk]:
+    return smart_chunk_document(document, chunk_size, chunk_overlap)
+
+
+def smart_chunk_document(
     document: ParsedDocument,
     chunk_size: int = settings.chunk_size,
     chunk_overlap: int = settings.chunk_overlap,
 ) -> list[TextChunk]:
     splitter = _build_splitter(chunk_size, chunk_overlap)
     chunks: list[TextChunk] = []
+    current_section: str | None = None
 
     for page in document.pages:
+        current_section = _detect_section(page.text, current_section)
         raw_chunks = [chunk.strip() for chunk in splitter.split_text(page.text)]
         page_chunks = [chunk for chunk in raw_chunks if len(chunk) >= 100]
         total_chunks = len(page_chunks)
 
         for chunk_index, text in enumerate(page_chunks):
+            current_section = _detect_section(text, current_section)
             chunk_id = (
                 f"{document.file_name}::page_{page.page_number}::chunk_{chunk_index}"
             )
@@ -66,6 +101,9 @@ def chunk_document(
                         chunk_index=chunk_index,
                         total_chunks_in_page=total_chunks,
                         char_count=len(text),
+                        section_name=current_section,
+                        is_reference=(current_section or "").lower() == "references",
+                        has_equation=_has_equation(text),
                     ),
                 )
             )
