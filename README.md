@@ -31,7 +31,7 @@ Runtime local:
 - Vector DB: ChromaDB persistent local
 - LLM: Ollama `llama3.2:3b`
 - Backend: FastAPI
-- Frontend: Next.js + TypeScript + Tailwind
+- Frontend: Next.js + TypeScript + Tailwind + `react-pdf`
 
 ## Trạng Thái Đã Hoàn Thành
 
@@ -45,12 +45,17 @@ Các phase nền tảng đã xong và đã push lên `main`:
 6. Next.js frontend.
 7. Polish local: cache, setup guide, tests, export, scripts.
 8. Local smoothing: Node/NPM, Ollama, model pull, audit, lint/build, start/check/stop scripts.
+9. Evidence-first RAG contract: citation id, quote, context, highlight ranges, PDF/page URLs.
+10. Research cockpit UI: Paper Library, Chat Workspace, Evidence/PDF Viewer.
+11. PDF visual source viewer bằng `react-pdf`, citation click và highlighted quote.
 
-Commit gần nhất:
+Milestone commits:
 
-```text
-6269fc8 chore: smooth local developer setup
-```
+Xem `git log --oneline` để biết commit mới nhất. Các milestone hoàn thiện chính:
+
+- `feat: add evidence source contracts`
+- `feat: add research cockpit evidence layout`
+- `test/docs: evidence coverage and project recap`
 
 Health local đã verify:
 
@@ -102,6 +107,131 @@ npm audit --audit-level=moderate
 npm run lint
 npm run build
 ```
+
+## Kết Quả Research Cockpit
+
+Phiên bản hiện tại đã chuyển từ chatbot đơn giản sang cockpit nghiên cứu có 3 vùng chính:
+
+```text
++--------------------------------------------------------------------------------+
+| Top Bar: trạng thái local, model, export, new chat                              |
++----------------------+---------------------------+-----------------------------+
+| Paper Library        | Chat Workspace            | Evidence / PDF Viewer        |
+| Upload/search/list   | Streaming answer          | PDF page, quote, context     |
+| delete/poll jobs     | citation chips            | highlight + source cards     |
++----------------------+---------------------------+-----------------------------+
+```
+
+Trên mobile/tablet, UI chuyển thành tabs:
+
+- `Papers`: upload, search, quản lý paper.
+- `Chat`: hỏi đáp RAG.
+- `Nguồn`: xem citation, PDF page, quote/context.
+
+Palette UI dùng gam lạnh/pastel:
+
+- Background: `#F6FAFD`
+- Surface soft: `#EEF7FA`
+- Border: `#D7E7EF`
+- Primary: `#2F80A7`
+- Highlight cyan: `#BDECF4`
+- Highlight indigo: `#DDE7FF`
+- Mint: `#DDF7EA`
+
+## Evidence Contract
+
+Mỗi source trong chat response hiện có đủ dữ liệu để UI render citation và paper viewer:
+
+```json
+{
+  "rank": 1,
+  "citation_id": "[1]",
+  "chunk_id": "paper.pdf::page_3::chunk_0",
+  "file_id": "stable-local-file-id",
+  "file_name": "paper.pdf",
+  "display_title": "Paper",
+  "page_number": 3,
+  "chunk_index": 0,
+  "section_name": "Method",
+  "score": 0.82,
+  "quote": "short exact quoted passage...",
+  "context": "larger chunk context...",
+  "highlight_ranges": [
+    { "start": 24, "end": 47, "kind": "query" }
+  ],
+  "pdf_url": "/api/files/stable-local-file-id/pdf",
+  "page_text_url": "/api/files/stable-local-file-id/pages/3",
+  "excerpt": "same as quote for compatibility"
+}
+```
+
+Các endpoint quan trọng:
+
+```text
+POST /api/chat/query
+POST /api/chat/stream
+GET  /api/chat/health
+GET  /api/ingest/files
+GET  /api/files/{file_id}/pdf
+GET  /api/files/{file_id}/pages/{page_number}
+GET  /api/sources/{chunk_id}
+```
+
+Luồng hoạt động:
+
+1. User upload PDF ở Paper Library.
+2. Backend parse PDF, chunk theo page, embed local và lưu Chroma.
+3. User hỏi ở Chat Workspace.
+4. Backend retrieve chunks, tạo citation `[1]`, `[2]`, quote/context và highlight ranges.
+5. SSE gửi event `sources` sớm để Evidence Viewer cập nhật trước khi answer stream xong.
+6. Ollama sinh answer theo ngôn ngữ câu hỏi, dùng citation `[N]`.
+7. User click citation trong answer để mở đúng PDF page và source card.
+
+## Highlight Và PDF Viewer
+
+Highlight được xử lý theo hướng an toàn:
+
+- Backend trích query terms tiếng Việt/English, bỏ stopwords và match vào quote.
+- Frontend render highlight bằng span/mark, không dùng `dangerouslySetInnerHTML`.
+- Highlight chắc chắn hoạt động trong quote/context.
+- PDF visual preview hiển thị đúng file/page; text-layer highlight trực tiếp trên canvas là best-effort và không phải điều kiện bắt buộc.
+
+PDF endpoint chỉ resolve file nằm trong `backend/data/papers`, không expose arbitrary path.
+
+## Recap Triển Khai
+
+Các cụm việc đã thực hiện:
+
+- Backend: thêm document resolver, file hash id, source evidence models, highlight engine, PDF/page endpoints, source detail endpoint.
+- Retrieval: thêm lexical boost nhẹ, lọc references mặc định, giảm trùng page khi rank.
+- Generation: prompt yêu cầu answer cùng ngôn ngữ với query và cite bằng `[N]`.
+- Streaming: source event được emit sớm để UI load evidence ngay.
+- Frontend: thêm `AppShell`, cockpit layout, mobile tabs, PDF viewer client-only, source cards, citation buttons, highlighted text renderer.
+- UI: đổi sang palette lạnh/pastel, copy song ngữ Việt/English, panel scroll độc lập.
+- Tests: bổ sung coverage cho source contract, highlight ranges, PDF/page endpoint và Ollama offline degrade.
+
+## Kiểm Thử Hoàn Thiện
+
+Các lệnh đã dùng để xác nhận:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m compileall backend\app backend\tests
+.\backend\.venv\Scripts\python.exe -m pytest .\backend\tests -q
+cd frontend
+npm audit --audit-level=moderate
+npm run lint
+npm run build
+cd ..
+.\scripts\start_local.ps1
+.\scripts\check_local.ps1
+```
+
+Kỳ vọng:
+
+- Backend tests pass.
+- Frontend audit/lint/build pass.
+- `check_local.ps1` báo backend OK, Ollama model loaded, vector chunks, frontend 200.
+- Git không stage `tasks/`, `.env`, PDF, Chroma DB, logs, `.local`, `node_modules`, `.next`.
 
 ## Master Plan Hoàn Thiện Dự Án
 
