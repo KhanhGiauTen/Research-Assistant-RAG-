@@ -1,0 +1,99 @@
+from __future__ import annotations
+
+from collections import Counter
+import logging
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pydantic import BaseModel
+
+from app.config import settings
+from app.ingestion.pdf_parser import ParsedDocument
+
+
+logger = logging.getLogger(__name__)
+
+
+class ChunkMetadata(BaseModel):
+    file_name: str
+    file_path: str
+    page_number: int
+    chunk_index: int
+    total_chunks_in_page: int
+    char_count: int
+
+
+class TextChunk(BaseModel):
+    chunk_id: str
+    text: str
+    metadata: ChunkMetadata
+
+
+def _build_splitter(chunk_size: int, chunk_overlap: int) -> RecursiveCharacterTextSplitter:
+    return RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        separators=["\n\n", "\n", ". ", " ", ""],
+        keep_separator=True,
+        strip_whitespace=True,
+    )
+
+
+def chunk_document(
+    document: ParsedDocument,
+    chunk_size: int = settings.chunk_size,
+    chunk_overlap: int = settings.chunk_overlap,
+) -> list[TextChunk]:
+    splitter = _build_splitter(chunk_size, chunk_overlap)
+    chunks: list[TextChunk] = []
+
+    for page in document.pages:
+        raw_chunks = [chunk.strip() for chunk in splitter.split_text(page.text)]
+        page_chunks = [chunk for chunk in raw_chunks if len(chunk) >= 100]
+        total_chunks = len(page_chunks)
+
+        for chunk_index, text in enumerate(page_chunks):
+            chunk_id = (
+                f"{document.file_name}::page_{page.page_number}::chunk_{chunk_index}"
+            )
+            chunks.append(
+                TextChunk(
+                    chunk_id=chunk_id,
+                    text=text,
+                    metadata=ChunkMetadata(
+                        file_name=document.file_name,
+                        file_path=document.file_path,
+                        page_number=page.page_number,
+                        chunk_index=chunk_index,
+                        total_chunks_in_page=total_chunks,
+                        char_count=len(text),
+                    ),
+                )
+            )
+
+    counts = Counter(chunk.chunk_id for chunk in chunks)
+    duplicate_ids = [chunk_id for chunk_id, count in counts.items() if count > 1]
+    if duplicate_ids:
+        raise ValueError(f"Duplicate chunk IDs generated: {duplicate_ids[:3]}")
+
+    logger.info("Chunked %s into %s chunk(s)", document.file_name, len(chunks))
+    return chunks
+
+
+def chunk_documents(
+    documents: list[ParsedDocument],
+    chunk_size: int = settings.chunk_size,
+    chunk_overlap: int = settings.chunk_overlap,
+) -> list[TextChunk]:
+    chunks: list[TextChunk] = []
+
+    for document in documents:
+        chunks.extend(
+            chunk_document(
+                document,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+        )
+
+    logger.info("Created %s total chunk(s) from %s document(s)", len(chunks), len(documents))
+    return chunks
