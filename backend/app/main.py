@@ -3,9 +3,11 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 import logging
 
-from fastapi import APIRouter, FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from app.api import chat, ingest
 from app.config import settings
 
 
@@ -34,24 +36,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-ingest_router = APIRouter()
-chat_router = APIRouter()
-
-
-@ingest_router.get("")
-async def ingest_placeholder() -> dict[str, str]:
-    return {"status": "not implemented"}
-
-
-@chat_router.get("")
-async def chat_placeholder() -> dict[str, str]:
-    return {"status": "not implemented"}
-
-
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "ok", "model": settings.ollama_model}
 
 
-app.include_router(ingest_router, prefix="/api/ingest", tags=["ingestion"])
-app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error("Unhandled exception on %s: %s", request.url.path, exc, exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
+app.include_router(ingest.router, prefix="/api/ingest", tags=["ingestion"])
+app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
