@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -42,6 +42,23 @@ class Settings(BaseSettings):
         env_file=BACKEND_DIR / ".env",
         extra="ignore",
     )
+
+    @field_validator("cors_origins", mode="after")
+    @classmethod
+    def include_local_dev_origins(cls, origins: list[str]) -> list[str]:
+        required = [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:3002",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+            "http://127.0.0.1:3002",
+        ]
+        merged = list(origins)
+        for origin in required:
+            if origin not in merged:
+                merged.append(origin)
+        return merged
 
     @property
     def chroma_path(self) -> Path:
