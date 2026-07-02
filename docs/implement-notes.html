@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nhật ký triển khai</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6fafd;
+        --surface: #ffffff;
+        --surface-soft: #eef7fa;
+        --border: #d7e7ef;
+        --text: #17324d;
+        --muted: #62748a;
+        --accent: #2f80a7;
+        --accent-soft: #bdecf4;
+        --ok-soft: #ddf7ea;
+        --warn-soft: #fff3c4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1080px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 48px;
+      }
+
+      .page-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 18px;
+        margin-bottom: 20px;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+        font-size: clamp(1.8rem, 3vw, 2.5rem);
+      }
+
+      .page-header p,
+      .note-meta,
+      .note-footer {
+        color: var(--muted);
+      }
+
+      .notes {
+        display: grid;
+        gap: 16px;
+      }
+
+      .note-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        box-shadow: 0 12px 30px rgba(23, 50, 77, 0.08);
+        overflow: hidden;
+      }
+
+      .note-card header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        background: var(--surface-soft);
+        border-bottom: 1px solid var(--border);
+        padding: 18px 20px;
+      }
+
+      .note-card h2 {
+        margin-bottom: 6px;
+        font-size: 1.15rem;
+      }
+
+      .note-meta {
+        display: grid;
+        gap: 3px;
+        font-size: 0.92rem;
+      }
+
+      .note-body {
+        display: grid;
+        gap: 14px;
+        padding: 18px 20px 20px;
+      }
+
+      .note-section {
+        border-left: 3px solid var(--accent-soft);
+        padding-left: 12px;
+      }
+
+      .note-section h3 {
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+        color: var(--accent);
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      code {
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: var(--surface-soft);
+        padding: 0.1rem 0.28rem;
+        font-size: 0.92em;
+      }
+
+      .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .badge {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--ok-soft);
+        color: var(--text);
+        padding: 4px 10px;
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .badge.warning {
+        background: var(--warn-soft);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="page-header">
+        <h1>Nhật ký triển khai</h1>
+        <p>
+          Cập nhật gần nhất:
+          <time datetime="2026-07-02T15:06:43+07:00">2026-07-02 15:06:43 +07:00</time>
+          · Người note: <strong>KhanhGiauTen</strong>
+        </p>
+        <p>
+          Các card được sắp xếp theo thời gian gần nhất ở trên cùng. Mọi thay đổi
+          đụng mã nguồn, test, script, config runtime, dependency, API contract,
+          prompt, UI hoặc tài liệu vận hành đều phải được ghi lại bằng tiếng Việt.
+        </p>
+      </header>
+
+      <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-02T15:06:43+07:00">
+          <header>
+            <div>
+              <h2>Thiết lập luật agent và tài liệu kiến trúc dài hạn</h2>
+              <div class="badges">
+                <span class="badge">docs</span>
+                <span class="badge">agent-rule</span>
+                <span class="badge warning">governance</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-02T15:06:43+07:00">2026-07-02 15:06:43 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Cần một luật repo áp dụng cho mọi phiên agent để các quyết định,
+                thay đổi và kiến trúc dự án không bị mất ngữ cảnh giữa các phiên
+                làm việc dài hạn phục vụ nghiên cứu.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Dùng <code>AGENTS.md</code> ở root làm luật bắt buộc cho agent/Codex session.</li>
+                <li>Bắt buộc phiên mới đọc <code>docs/ARCHITECTURE.md</code> và <code>docs/implement-notes.html</code>.</li>
+                <li>Dùng <code>docs/implement-notes.html</code> làm nhật ký card HTML, tiếng Việt, mới nhất trước.</li>
+                <li>Dùng <code>docs/ARCHITECTURE.md</code> làm bản đồ kiến trúc để giảm nhu cầu quét toàn repo ở đầu phiên.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>AGENTS.md</code>: thêm luật đọc docs, ghi note, xử lý conflict, commit/push.</li>
+                <li><code>docs/ARCHITECTURE.md</code>: ghi lại kiến trúc hiện tại của backend, frontend, RAG flow, endpoint và lệnh chạy/test.</li>
+                <li><code>docs/implement-notes.html</code>: tạo nhật ký triển khai dạng card có timestamp và người note.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                Các phiên sau có điểm vào rõ ràng để hiểu dự án và phải cập nhật
+                note/kiến trúc khi đụng mã nguồn. Quy trình này hỗ trợ tái cấu
+                trúc lớn theo từng commit nhỏ mà vẫn giữ được lịch sử quyết định.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <p>
+                Thay đổi chỉ là tài liệu/quy trình. Cần kiểm tra git diff, whitespace
+                bằng <code>git diff --check</code>, sau đó commit và push lên remote.
+              </p>
+            </section>
+          </div>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
