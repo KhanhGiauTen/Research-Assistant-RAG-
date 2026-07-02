@@ -1,6 +1,6 @@
 # Kiến Trúc Dự Án
 
-Cập nhật gần nhất: 2026-07-02 15:06:43 +07:00
+Cập nhật gần nhất: 2026-07-02 15:43:38 +07:00
 
 Người cập nhật: KhanhGiauTen
 
@@ -20,7 +20,8 @@ Người cập nhật: KhanhGiauTen
 - Embedding: `sentence-transformers/all-MiniLM-L6-v2`.
 - Vector store: ChromaDB persistent local trong `backend/chroma_db`.
 - LLM: Ollama, mặc định `llama3.2:3b`.
-- Frontend: Next.js 15, React 18, TypeScript, Tailwind CSS, `react-pdf`, `lucide-react`.
+- Frontend: Next.js 15, React 18, TypeScript, Tailwind CSS, `lucide-react`.
+- PDF visual: browser-native iframe viewer trỏ tới endpoint PDF local, tránh phụ thuộc `pdfjs-dist` trong Next.js dev/build.
 - Local scripts: PowerShell trong `scripts/`.
 
 ## Cấu Trúc Thư Mục
@@ -55,9 +56,9 @@ AGENTS.md                        -> luật bắt buộc cho agent/Codex session
 6. User hỏi qua `/api/chat/stream` hoặc `/api/chat/query`.
 7. `retrieve` embed query, query Chroma, cộng lexical boost nhẹ, lọc references khi câu hỏi không hỏi tài liệu tham khảo, giảm trùng page.
 8. `build_source_references` tạo `SourceReference`: citation `[N]`, file/page/chunk id, quote, context, highlight ranges, PDF/page URL.
-9. Streaming API emit `sources` sớm để evidence panel cập nhật trước khi answer hoàn tất.
+9. Streaming API emit `sources` sớm và re-emit khi `done` để evidence panel luôn rehydrate được source state.
 10. Nếu Ollama sẵn sàng, backend gọi model với prompt chỉ trả lời từ context và cite bằng `[N]`; nếu không, API degrade bằng cách trả retrieved passages.
-11. Frontend hiển thị answer, citation chips, quote/context highlight, PDF/page text viewer.
+11. Frontend hiển thị answer, citation chips, quote/context highlight và PDF visual viewer mở đúng file/page.
 
 ## Endpoint Quan Trọng
 
@@ -104,6 +105,8 @@ Quy ước:
 - `useChat` dùng SSE stream, lưu `session_id` trong localStorage, cập nhật sources khi nhận event `sources`.
 - `usePapers` quản lý list/upload/poll/delete paper.
 - `EvidenceWorkspace` nhận `activeSources` và `selectedSource`, hỗ trợ xem nguồn liên quan khi click citation.
+- `PdfEvidenceViewerClient` dùng iframe native với page anchor, zoom state và nút mở PDF tab mới.
+- Ảnh xác minh UI nằm trong `docs/assets/screenshots/` và được README dùng để recap desktop/mobile.
 
 ## Lệnh Chạy Local
 

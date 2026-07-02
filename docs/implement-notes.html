@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-02T15:06:43+07:00">2026-07-02 15:06:43 +07:00</time>
+          <time datetime="2026-07-02T15:43:38+07:00">2026-07-02 15:43:38 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,85 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-02T15:43:38+07:00">
+          <header>
+            <div>
+              <h2>Hoàn thiện README, ảnh UI và ổn định evidence viewer</h2>
+              <div class="badges">
+                <span class="badge">docs</span>
+                <span class="badge">ui</span>
+                <span class="badge">evidence</span>
+                <span class="badge warning">runtime-fix</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-02T15:43:38+07:00">2026-07-02 15:43:38 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Sau khi research cockpit có source contract và UI evidence pane,
+                cần cập nhật README thành tài liệu tổng quan hoàn chỉnh, capture
+                ảnh desktop/mobile và xử lý các lỗi phát hiện trong quá trình
+                browser verification.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Thay viewer dựa trên <code>react-pdf/pdfjs-dist</code> bằng iframe PDF native để tránh crash runtime trong Next.js dev/build.</li>
+                <li>Giữ highlight đáng tin cậy trong quote/context thay vì ép overlay trực tiếp lên PDF canvas.</li>
+                <li>Re-emit event <code>sources</code> khi stream <code>done</code> để frontend luôn rehydrate được evidence panel.</li>
+                <li>Viết lại <code>README.md</code> theo hướng hồ sơ dự án: ảnh UI, caption, kiến trúc, API, test, recap milestone và quyết định kỹ thuật.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>frontend/components/evidence/PdfEvidenceViewerClient.tsx</code>: dùng iframe native, page anchor, zoom state, open external.</li>
+                <li><code>frontend/app/layout.tsx</code>, <code>frontend/app/globals.css</code>, <code>frontend/next.config.mjs</code>, <code>frontend/package*.json</code>: bỏ cấu hình/CSS/dependency <code>react-pdf</code>.</li>
+                <li><code>backend/app/api/chat.py</code>: re-emit sources ở cuối streaming.</li>
+                <li><code>docs/assets/screenshots/*.png</code>: lưu ảnh desktop cockpit, evidence answer, mobile chat và mobile sources.</li>
+                <li><code>README.md</code>, <code>docs/ARCHITECTURE.md</code>, <code>docs/implement-notes.html</code>: cập nhật tài liệu tổng quan và kiến trúc.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                UI evidence ổn định hơn khi chạy local, citation click vẫn mở
+                đúng PDF/page, source cards luôn có dữ liệu sau khi stream xong,
+                và README hiện phản ánh đúng trạng thái sản phẩm thay vì roadmap
+                cũ.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <ul>
+                <li><code>.\backend\.venv\Scripts\python.exe -m pytest backend\tests -q</code>: pass.</li>
+                <li><code>npm audit --audit-level=moderate</code>, <code>npm run lint</code>, <code>npm run build</code>: pass sau khi bỏ <code>react-pdf</code>.</li>
+                <li>Browser verification xác nhận citation, sources, copy quote, highlight và PDF viewer không còn runtime overlay.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Rủi ro hoặc việc tiếp theo</h3>
+              <p>
+                Iframe PDF native phụ thuộc khả năng render PDF của trình duyệt.
+                Nếu cần highlight trực tiếp trên canvas/PDF text layer, nên tách
+                thành milestone riêng với mapping text layer hoặc OCR local.
+              </p>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-02T15:06:43+07:00">
           <header>
             <div>
