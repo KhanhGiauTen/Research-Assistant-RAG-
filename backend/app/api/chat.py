@@ -261,6 +261,7 @@ async def stream_generator(request: ChatRequest) -> AsyncGenerator[str, None]:
                         streamed_answer,
                         request.filter_file,
                     )
+                    yield _sse({"type": "sources", "sources": sources})
             except json.JSONDecodeError:
                 pass
             yield _sse(event)
