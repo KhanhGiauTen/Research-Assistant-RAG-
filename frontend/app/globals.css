@@ -43,15 +43,3 @@ select {
   background: var(--accent-cyan);
   color: var(--foreground);
 }
-
-.react-pdf__Page {
-  display: flex;
-  justify-content: center;
-}
-
-.react-pdf__Page canvas {
-  max-width: 100%;
-  height: auto !important;
-  border-radius: 6px;
-  box-shadow: 0 18px 40px rgb(23 50 77 / 12%);
-}
