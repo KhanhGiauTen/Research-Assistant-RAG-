@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, ExternalLink, FileWarning, ZoomIn, ZoomOut } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  FileWarning,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { toApiUrl } from "@/lib/api";
@@ -28,33 +35,49 @@ export function PdfEvidenceViewerClient({ source }: PdfEvidenceViewerClientProps
 
   if (!source) {
     return (
-      <div className="flex min-h-72 items-center justify-center rounded-md border border-dashed border-[var(--border)] bg-white p-6 text-center text-sm text-[var(--muted)]">
-        Chọn citation để xem trang PDF tương ứng.
+      <div className="flex min-h-72 items-center justify-center rounded-md border border-dashed border-[var(--border-strong)] bg-white p-6 text-center text-sm text-[var(--muted)]">
+        <div>
+          <FileWarning className="mx-auto mb-2 h-6 w-6 text-[var(--accent)]" />
+          Chọn citation để xem trang PDF tương ứng.
+        </div>
       </div>
     );
   }
 
   if (!viewerUrl || !fileUrl) {
     return (
-      <div className="flex min-h-72 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--warning-soft)] p-6 text-center text-sm">
-        <FileWarning className="mr-2 h-5 w-5" />
-        PDF chưa có trên ổ đĩa, vẫn có thể đọc quote/context bên dưới.
+      <div className="flex min-h-72 items-center justify-center rounded-md border border-amber-200 bg-[var(--warning-soft)] p-6 text-center text-sm">
+        <div>
+          <FileWarning className="mx-auto mb-2 h-6 w-6 text-[var(--warning)]" />
+          <p className="font-semibold">PDF chưa có trên ổ đĩa</p>
+          <p className="mt-1 text-[var(--muted)]">
+            Vẫn có thể đọc quote/context bên dưới để kiểm chứng text evidence.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <section className="overflow-hidden rounded-md border border-[var(--border)] bg-white shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-muted)] px-3 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-raised)] px-3 py-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{source.display_title}</p>
-          <p className="text-xs text-[var(--muted)]">
-            {source.citation_id} - page {pageNumber} - zoom {zoom}%
-          </p>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className="rounded-md bg-[var(--accent)] px-2 py-1 text-xs font-bold text-white">
+              {source.citation_id}
+            </span>
+            <span className="rounded-md bg-[var(--accent-soft)] px-2 py-1 text-xs font-semibold text-[var(--accent)]">
+              Page {pageNumber}
+            </span>
+            <span className="rounded-md bg-[var(--surface-muted)] px-2 py-1 text-xs font-semibold text-[var(--muted)]">
+              Zoom {zoom}%
+            </span>
+          </div>
+          <p className="truncate text-sm font-semibold">{source.display_title}</p>
         </div>
         <div className="flex items-center gap-1">
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white disabled:opacity-40"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-40"
             disabled={pageNumber <= 1}
             onClick={() => setPageNumber((current) => Math.max(1, current - 1))}
             title="Previous page"
@@ -63,7 +86,7 @@ export function PdfEvidenceViewerClient({ source }: PdfEvidenceViewerClientProps
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             onClick={() => setPageNumber((current) => current + 1)}
             title="Next page"
             type="button"
@@ -71,7 +94,7 @@ export function PdfEvidenceViewerClient({ source }: PdfEvidenceViewerClientProps
             <ChevronRight className="h-4 w-4" />
           </button>
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             onClick={() => setZoom((current) => Math.max(60, current - 10))}
             title="Zoom out"
             type="button"
@@ -79,7 +102,7 @@ export function PdfEvidenceViewerClient({ source }: PdfEvidenceViewerClientProps
             <ZoomOut className="h-4 w-4" />
           </button>
           <button
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             onClick={() => setZoom((current) => Math.min(160, current + 10))}
             title="Zoom in"
             type="button"
@@ -87,7 +110,7 @@ export function PdfEvidenceViewerClient({ source }: PdfEvidenceViewerClientProps
             <ZoomIn className="h-4 w-4" />
           </button>
           <a
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-[var(--border)] bg-white text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             href={fileUrl}
             rel="noreferrer"
             target="_blank"

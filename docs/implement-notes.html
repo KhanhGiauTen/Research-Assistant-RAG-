@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-03T22:43:32+07:00">2026-07-03 22:43:32 +07:00</time>
+          <time datetime="2026-07-03T22:47:51+07:00">2026-07-03 22:47:51 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,70 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-03T22:47:51+07:00">
+          <header>
+            <div>
+              <h2>Polish Evidence Workspace và PDF source viewer</h2>
+              <div class="badges">
+                <span class="badge">ui</span>
+                <span class="badge">evidence</span>
+                <span class="badge">pdf-viewer</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-03T22:47:51+07:00">2026-07-03 22:47:51 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Evidence panel là trọng tâm trust/evidence của research cockpit,
+                cần làm nổi bật selected source, page PDF, score và đoạn text liên quan.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Header Evidence hiển thị selected citation, paper, page, section và score.</li>
+                <li>PDF viewer native giữ nguyên nhưng toolbar được polish với badge citation/page/zoom.</li>
+                <li>Source card có score bar, citation badge, page badge và matched quote marker.</li>
+                <li>Page text preview highlight best-effort bằng term từ quote highlight ranges.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>frontend/components/evidence/EvidenceWorkspace.tsx</code>: selected source summary, empty state, page text highlight best-effort.</li>
+                <li><code>frontend/components/evidence/PdfEvidenceViewerClient.tsx</code>: polish toolbar và missing PDF state.</li>
+                <li><code>frontend/components/evidence/SourceCard.tsx</code>: score bar, badges, quote/context actions.</li>
+                <li><code>docs/implement-notes.html</code>: ghi nhận cụm evidence UI.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                Khi user click citation hoặc nhận sources từ streaming, panel Evidence
+                truyền đạt rõ nguồn nào đang được chọn, mức liên quan bao nhiêu và
+                đoạn nào trong page text khớp với truy vấn.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <p>
+                Chạy <code>npm run lint</code> và <code>npm run build</code>. Browser
+                smoke test sẽ xác nhận PDF/source/citation sau khi capture screenshot.
+              </p>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-03T22:43:32+07:00">
           <header>
             <div>
