@@ -1,6 +1,6 @@
 # Kiến Trúc Dự Án
 
-Cập nhật gần nhất: 2026-07-02 15:43:38 +07:00
+Cập nhật gần nhất: 2026-07-03 22:59:44 +07:00
 
 Người cập nhật: KhanhGiauTen
 
@@ -11,7 +11,7 @@ Người cập nhật: KhanhGiauTen
 - Ingest và quản lý nhiều PDF nghiên cứu trên máy cá nhân.
 - Hỏi đáp bằng tiếng Việt hoặc tiếng Anh dựa trên nội dung paper đã index.
 - Luôn trả nguồn dẫn rõ ràng: citation id, paper, trang, quote, context, score.
-- UI dạng research cockpit gồm quản lý paper, chat workspace, và evidence/PDF viewer.
+- UI dạng Research Command Center gồm quản lý paper, chat workspace, và evidence/PDF viewer.
 - Không gửi PDF hoặc vector DB lên dịch vụ trả phí; embedding và LLM chạy local.
 
 ## Stack Chính
@@ -38,7 +38,7 @@ backend/tests/                   -> backend contract/regression tests
 backend/data/papers/             -> PDF local, ignored khỏi git
 backend/chroma_db/               -> Chroma persistent DB, ignored khỏi git
 frontend/app/                    -> Next app shell route/global CSS
-frontend/components/             -> cockpit UI: papers, chat, evidence, status
+frontend/components/             -> command center UI: papers, chat, evidence, status
 frontend/lib/                    -> API client, hooks, shared types
 scripts/                         -> setup/start/check/stop/ingest local
 docs/ARCHITECTURE.md             -> bản đồ kiến trúc cho phiên mới
@@ -58,7 +58,7 @@ AGENTS.md                        -> luật bắt buộc cho agent/Codex session
 8. `build_source_references` tạo `SourceReference`: citation `[N]`, file/page/chunk id, quote, context, highlight ranges, PDF/page URL.
 9. Streaming API emit `sources` sớm và re-emit khi `done` để evidence panel luôn rehydrate được source state.
 10. Nếu Ollama sẵn sàng, backend gọi model với prompt chỉ trả lời từ context và cite bằng `[N]`; nếu không, API degrade bằng cách trả retrieved passages.
-11. Frontend hiển thị answer, citation chips, quote/context highlight và PDF visual viewer mở đúng file/page.
+11. Frontend hiển thị answer, citation chips, evidence ribbon, quote/context/page text highlight và PDF visual viewer mở đúng file/page.
 
 ## Endpoint Quan Trọng
 
@@ -99,14 +99,16 @@ Quy ước:
 
 ## Frontend Hiện Tại
 
-- `AppShell` là màn hình chính dạng cockpit.
-- Desktop chia 3 vùng: Paper Library, Chat Workspace, Evidence/PDF Viewer.
+- `AppShell` là màn hình chính dạng Research Command Center.
+- Desktop chia 3 vùng: Paper Library, Chat Workspace, Evidence/PDF Viewer, trong root `h-screen overflow-hidden`.
 - Mobile/tablet dùng tabs `Papers`, `Chat`, `Nguồn`.
+- Header command bar hiển thị runtime local/free, papers, vector chunks, active sources, export và new chat.
 - `useChat` dùng SSE stream, lưu `session_id` trong localStorage, cập nhật sources khi nhận event `sources`.
 - `usePapers` quản lý list/upload/poll/delete paper.
 - `EvidenceWorkspace` nhận `activeSources` và `selectedSource`, hỗ trợ xem nguồn liên quan khi click citation.
 - `PdfEvidenceViewerClient` dùng iframe native với page anchor, zoom state và nút mở PDF tab mới.
-- Ảnh xác minh UI nằm trong `docs/assets/screenshots/` và được README dùng để recap desktop/mobile.
+- `SourceCard` hiển thị citation badge, page, score bar, quote/context và copy quote.
+- Ảnh xác minh UI mới nằm trong `docs/assets/screenshots/` và được README dùng để recap desktop/mobile.
 
 ## Lệnh Chạy Local
 

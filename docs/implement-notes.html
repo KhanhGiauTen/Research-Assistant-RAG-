@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-03T22:56:12+07:00">2026-07-03 22:56:12 +07:00</time>
+          <time datetime="2026-07-03T22:59:44+07:00">2026-07-03 22:59:44 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,69 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-03T22:59:44+07:00">
+          <header>
+            <div>
+              <h2>Refresh README portfolio và screenshot UI mới</h2>
+              <div class="badges">
+                <span class="badge">docs</span>
+                <span class="badge">screenshots</span>
+                <span class="badge">readme</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-03T22:59:44+07:00">2026-07-03 22:59:44 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Sau redesign command center, README cũ cần được thay bằng bản
+                portfolio kỹ thuật chuyên nghiệp và screenshot phải phản ánh UI mới.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>README mở bằng project summary, UI gallery, architecture, user journey, evidence contract, API, run/test và data safety.</li>
+                <li>Thay toàn bộ 4 screenshot desktop/mobile trong <code>docs/assets/screenshots/</code>.</li>
+                <li>Cập nhật <code>docs/ARCHITECTURE.md</code> để mô tả Research Command Center, viewport lock và source card mới.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>README.md</code>: rewrite thành portfolio kỹ thuật.</li>
+                <li><code>docs/assets/screenshots/*.png</code>: capture lại command center, answer/evidence, mobile chat, mobile sources.</li>
+                <li><code>docs/ARCHITECTURE.md</code>: cập nhật bản đồ UI/architecture.</li>
+                <li><code>docs/implement-notes.html</code>: ghi nhận cụm docs/screenshot.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                Repo có README thể hiện đúng trạng thái sản phẩm hiện tại, dùng
+                được cho portfolio kỹ thuật và onboarding agent/dev mới.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <ul>
+                <li><code>.\scripts\check_local.ps1</code>: backend OK, Ollama model loaded, frontend 200.</li>
+                <li>Browser verification: desktop 1440px, mobile 390px, citation, selected source, PDF iframe và không có runtime error.</li>
+                <li>Trước commit cần kiểm tra staged list không chứa <code>tasks/</code>, <code>phase.md</code>, PDF, Chroma DB, env hoặc logs.</li>
+              </ul>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-03T22:56:12+07:00">
           <header>
             <div>

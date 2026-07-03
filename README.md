@@ -1,139 +1,94 @@
 # Local Research Assistant RAG
 
-`Local Research Assistant RAG` là research cockpit chạy hoàn toàn trên máy cá nhân để upload paper PDF, ingest nội dung, hỏi đáp RAG, xem nguồn trích dẫn, mở đúng trang PDF và highlight đoạn liên quan. Dự án được thiết kế theo hướng local-first, evidence-first, chi phí API bằng 0.
+Research Command Center chạy hoàn toàn local để upload paper PDF, index bằng embedding miễn phí, hỏi đáp RAG với Ollama, xem citation, quote/context, score và trang PDF liên quan ngay trong cùng một giao diện.
 
-Không cần OpenAI API key, không cần dịch vụ cloud trả phí. PDF, vector database và session local đều nằm trên máy của bạn.
+Mục tiêu chính: giúp người đọc paper kiểm chứng câu trả lời nhanh hơn, không gửi dữ liệu nghiên cứu lên dịch vụ trả phí/cloud.
 
-## Điểm Nổi Bật
+## Highlights
 
-- Upload, ingest, quản lý và xóa nhiều paper PDF local.
-- Chat RAG bằng tiếng Việt hoặc tiếng Anh; câu trả lời đi theo ngôn ngữ câu hỏi.
-- Citation rõ ràng theo dạng `[1]`, `[2]`, kèm paper, trang, score, quote và context.
-- Evidence panel hiển thị trực tiếp PDF ở nửa giao diện, mở đúng page từ citation.
-- Highlight từ khóa truy vấn trong quote/context bằng renderer an toàn, không dùng HTML injection.
-- Streaming answer bằng SSE; nguồn có thể xuất hiện trước khi câu trả lời stream xong.
-- Degraded mode khi Ollama offline: backend không crash và vẫn trả nguồn đã retrieve.
-- UI responsive: desktop 3 pane, mobile/tablet dùng tab `Papers`, `Chat`, `Nguồn`.
-- Palette lạnh/pastel, bố cục chuyên nghiệp, panel scroll độc lập, phù hợp workflow đọc paper.
-- Toàn bộ runtime free/local: Python, FastAPI, ChromaDB, Sentence Transformers, Ollama, Next.js.
+- Local/free end to end: FastAPI, ChromaDB, Sentence Transformers, Ollama, Next.js.
+- Upload và quản lý nhiều PDF trong `backend/data/papers`.
+- Chat song ngữ: hỏi tiếng Việt hoặc English, answer đi theo ngôn ngữ câu hỏi.
+- Citation dạng `[1]`, `[2]` nối trực tiếp answer với source cards.
+- Evidence panel hiển thị paper/page, score, quote, context và PDF viewer.
+- Highlight query terms trong quote/context và page text preview theo best effort.
+- Streaming SSE có buffer, sources xuất hiện trước hoặc cùng lúc answer hoàn tất.
+- Degraded mode khi Ollama offline: backend không crash và vẫn trả retrieved sources.
+- Desktop 3-pane command center; mobile dùng tabs `Papers`, `Chat`, `Nguồn`.
 
-## Ảnh UI Và Chú Thích
+## UI Gallery
 
-### Desktop Research Cockpit
+### 1. Research Command Center
 
-![Desktop research cockpit](docs/assets/screenshots/01-desktop-cockpit.png)
+![Desktop command center](docs/assets/screenshots/01-desktop-cockpit.png)
 
-Chú thích:
+Giao diện desktop chia 3 vùng:
 
-- Bên trái là `Paper Library`: upload, danh sách paper, tìm kiếm, trạng thái ingest.
-- Ở giữa là `Chat Workspace`: hội thoại, streaming answer, citation chips và ô nhập câu hỏi.
-- Bên phải là `Evidence / PDF Viewer`: không gian xem nguồn chiếm gần nửa màn hình để user kiểm chứng ngay khi hỏi.
-- Top bar gom trạng thái backend, Ollama/model, số chunks, export và thao tác phiên chat.
+- `Paper Library`: upload PDF, search, file/chunk stats, PDF ready state.
+- `Chat Workspace`: prompt starters, scope selector, cited answer và evidence ribbon.
+- `Evidence / PDF Viewer`: selected source summary, PDF/page viewer, source checklist.
+- Command bar phía trên hiển thị runtime local/free, số papers, vector chunks và active sources.
 
-### Answer Có Citation, Quote Và PDF Page
+### 2. Answer With Evidence
 
-![Evidence answer with PDF viewer](docs/assets/screenshots/02-evidence-answer.png)
+![Answer with evidence](docs/assets/screenshots/02-evidence-answer.png)
 
-Chú thích:
+Khi user hỏi, answer đi kèm citation và evidence ribbon. Panel bên phải chọn source quan trọng nhất, mở đúng page, hiện similarity score, page text preview và source cards. PDF viewer dùng browser-native iframe để ổn định trong Next.js dev/build; phần highlight đáng tin cậy nằm trong quote/context/page text preview.
 
-- Citation trong answer trỏ tới source tương ứng ở evidence panel.
-- Source card hiển thị similarity, trang PDF, quote ngắn và context mở rộng.
-- Query terms được highlight trong quote/context để user nhìn ra vì sao đoạn đó được chọn.
-- PDF viewer dùng browser-native iframe để ổn định trên Next.js dev/build, vẫn mở đúng file và page.
+### 3. Mobile Chat
 
-### Mobile Chat
+![Mobile chat](docs/assets/screenshots/03-mobile-chat.png)
 
-![Mobile chat tab](docs/assets/screenshots/03-mobile-chat.png)
+Mobile giữ input và answer ở tab `Chat`, tránh ép 3 pane vào màn hình nhỏ. Citation vẫn click được để chuyển sang nguồn liên quan.
 
-Chú thích:
+### 4. Mobile Sources
 
-- Mobile chuyển layout sang tab để tránh chen chúc nội dung.
-- Tab `Chat` ưu tiên hội thoại và input, giữ thao tác hỏi đáp gọn trên màn hình nhỏ.
+![Mobile sources](docs/assets/screenshots/04-mobile-sources.png)
 
-### Mobile Sources
+Tab `Nguồn` gom selected source, PDF preview và source cards theo chiều dọc để user kiểm chứng trên mobile.
 
-![Mobile sources tab](docs/assets/screenshots/04-mobile-sources.png)
-
-Chú thích:
-
-- Tab `Nguồn` gom citation, PDF preview và source cards theo chiều dọc.
-- Khi user click citation ở answer, UI có thể chuyển sang nguồn liên quan để kiểm chứng.
-
-## Kiến Trúc Tổng Quan
+## Architecture
 
 ```mermaid
 flowchart LR
-  PDF["PDF local<br/>backend/data/papers"] --> Parse["PyMuPDF parser"]
-  Parse --> Chunk["Page-aware chunker"]
+  PDF["Local PDF<br/>backend/data/papers"] --> Parse["PyMuPDF<br/>page text"]
+  Parse --> Chunk["Deterministic<br/>page-aware chunks"]
   Chunk --> Embed["Sentence Transformers<br/>all-MiniLM-L6-v2"]
   Embed --> Chroma["ChromaDB persistent<br/>backend/chroma_db"]
-  User["User query"] --> API["FastAPI RAG API"]
+  Query["User query"] --> API["FastAPI RAG API"]
   Chroma --> Retrieve["Dense retrieval<br/>+ lexical boost"]
-  Retrieve --> Evidence["Source contract<br/>citation, quote, context, highlights"]
+  Retrieve --> Evidence["Evidence contract<br/>citation, quote, context, highlights"]
   Evidence --> Ollama["Ollama<br/>llama3.2:3b"]
-  Ollama --> Stream["SSE stream"]
-  Evidence --> Stream
-  Stream --> UI["Next.js Research Cockpit"]
+  Evidence --> Stream["SSE stream"]
+  Ollama --> Stream
+  Stream --> UI["Next.js<br/>Research Command Center"]
 ```
 
-### Stack Chính
+Runtime stack:
 
 - Backend: Python 3.11, FastAPI, Pydantic, PyMuPDF.
-- Ingestion: PDF text extraction, page metadata, deterministic chunking.
-- Embedding: `sentence-transformers/all-MiniLM-L6-v2`, chạy local và cache model trên máy.
-- Vector store: ChromaDB persistent local trong `backend/chroma_db`.
-- Retrieval: dense vector search, lexical boost, dedupe page, filter references mặc định.
-- LLM: Ollama, mặc định `llama3.2:3b`.
+- Embedding: `sentence-transformers/all-MiniLM-L6-v2`.
+- Vector store: ChromaDB persistent local.
+- LLM: Ollama, default `llama3.2:3b`.
 - Frontend: Next.js 15, React 18, TypeScript, Tailwind CSS, `lucide-react`.
-- PDF visual: browser-native PDF iframe, không phụ thuộc cloud viewer.
-- Scripts: PowerShell setup/start/check/stop cho Windows local.
+- PDF visual: browser-native iframe via local FastAPI PDF endpoint.
+- Local scripts: PowerShell setup/start/check/stop.
 
-### Cấu Trúc Thư Mục
+## User Journey
 
-```text
-backend/
-  app/
-    api/             FastAPI routers: chat, ingest, files, sources
-    generation/      Ollama client, prompt, streaming/degraded generation
-    ingestion/       PDF parser, chunker, embedding pipeline
-    retrieval/       Chroma store, retriever, evidence builder, cache
-    documents.py     Safe paper resolver, file_id, page text, PDF response
-    main.py          FastAPI app, CORS, lifespan warmup
-  data/papers/       PDF local, ignored khỏi git
-  chroma_db/         Vector database local, ignored khỏi git
-  tests/             Contract/regression tests
-
-frontend/
-  app/               Next.js App Router, global style
-  components/        AppShell, PaperLibrary, Chat, Evidence, PDF viewer
-  lib/               API client, hooks, shared TypeScript types
-
-scripts/             setup/start/check/stop/ingest helpers
-docs/
-  ARCHITECTURE.md    Bản đồ kiến trúc ngắn cho phiên mới
-  implement-notes.html
-                    Nhật ký triển khai theo card HTML
-  assets/screenshots/
-                    Ảnh UI đã capture để recap dự án
-```
-
-## Luồng Hoạt Động
-
-1. User upload PDF từ `Paper Library` hoặc đặt file vào `backend/data/papers`.
-2. Backend validate file PDF, lưu trong vùng dữ liệu local và tạo ingest job.
-3. PyMuPDF parse text theo từng trang, báo lỗi rõ nếu PDF rỗng/scanned chưa OCR.
-4. Chunker chia text theo page, giữ metadata để citation trả đúng trang.
-5. Sentence Transformer tạo embedding local, ChromaDB lưu chunk persistent.
-6. User hỏi qua chat; backend embed query và retrieve top chunks từ Chroma.
-7. Retriever cộng lexical boost cho query terms, giảm trùng page, lọc references nếu user không hỏi phần tài liệu tham khảo.
-8. Evidence builder tạo source contract gồm citation, quote, context, highlight ranges, PDF URL và page text URL.
-9. `/api/chat/stream` emit `sources` qua SSE, sau đó stream token answer từ Ollama.
-10. Frontend render answer, citation chips, source cards và PDF page liên quan.
-11. User click citation để chọn source, xem quote/context highlight và mở đúng trang PDF.
+1. Upload PDF in `Paper Library`.
+2. Backend validates PDF and creates an ingest job.
+3. PyMuPDF extracts page text; chunker keeps page metadata.
+4. Sentence Transformer embeds chunks locally.
+5. ChromaDB persists vectors in `backend/chroma_db`.
+6. User asks a research question.
+7. Retriever combines dense search and lexical boost, then builds source references.
+8. SSE sends `sources`, token stream, and `done` events to the UI.
+9. UI renders answer, citation chips, evidence ribbon, PDF page and highlighted quote/context.
 
 ## Evidence Contract
 
-Mỗi source trả về cho frontend có dạng:
+Each source returned to the frontend includes enough data to render citations and evidence:
 
 ```json
 {
@@ -158,24 +113,24 @@ Mỗi source trả về cho frontend có dạng:
 }
 ```
 
-Quy ước:
+Rules:
 
-- `file_id` ưu tiên hash nội dung PDF; fallback deterministic theo tên file cho dữ liệu cũ.
-- `pdf_url` và `page_text_url` chỉ resolve file nằm trong `backend/data/papers`.
-- `highlight_ranges` tính trên quote/context và luôn được kiểm bounds.
-- `citation_id` là khóa UI chính để nối answer, citation chip và source card.
+- `file_id` prefers PDF content hash; older chunks can fall back to deterministic filename hash.
+- PDF/page endpoints resolve only inside `backend/data/papers`.
+- Highlight ranges are bounds-checked and rendered without `dangerouslySetInnerHTML`.
+- Citation id is the UI link between answer, source card and selected PDF page.
 
-## API Chính
+## Main API
 
 ```text
 GET    /health
 GET    /api/chat/health
 POST   /api/chat/query
 POST   /api/chat/stream
+POST   /api/chat/export
 POST   /api/chat/sessions
 GET    /api/chat/sessions/{session_id}
 DELETE /api/chat/sessions/{session_id}
-POST   /api/chat/export
 
 POST   /api/ingest/upload
 GET    /api/ingest/status/{job_id}
@@ -187,7 +142,7 @@ GET    /api/files/{file_id}/pages/{page_number}
 GET    /api/sources/{chunk_id}
 ```
 
-Streaming response dùng SSE:
+SSE stream shape:
 
 ```text
 data: {"type":"sources","sources":[...]}
@@ -197,18 +152,16 @@ data: {"type":"token","token":"..."}
 data: {"type":"done","sources":[...]}
 ```
 
-Frontend parser có buffer để xử lý event bị cắt giữa network chunks.
+## Run Locally
 
-## Cách Chạy Local
-
-Yêu cầu:
+Prerequisites:
 
 - Windows PowerShell.
 - Python 3.11.
 - Node.js/NPM.
-- Ollama đã cài và model `llama3.2:3b`.
+- Ollama with `llama3.2:3b`.
 
-Đường nhanh nhất:
+Fast path:
 
 ```powershell
 .\scripts\setup_local.ps1 -InstallMissingTools
@@ -216,18 +169,13 @@ Yêu cầu:
 .\scripts\check_local.ps1
 ```
 
-Dừng app:
+Stop:
 
 ```powershell
 .\scripts\stop_local.ps1
 ```
 
-Nếu port mặc định bận, script tự chọn port kế tiếp và ghi vào `.local/state.json`, ví dụ:
-
-```text
-Backend:  http://127.0.0.1:8001
-Frontend: http://127.0.0.1:3001
-```
+The start script writes current URLs/PIDs to `.local/local-pids.json` and picks the next free port if `3000` or `8000` is busy.
 
 Manual backend:
 
@@ -248,7 +196,7 @@ Copy-Item .env.local.example .env.local
 npm run dev
 ```
 
-## Kiểm Thử Và Verify
+## Verification
 
 Backend:
 
@@ -266,95 +214,53 @@ npm run lint
 npm run build
 ```
 
-Runtime smoke test:
+Runtime smoke:
 
 ```powershell
 .\scripts\start_local.ps1
 .\scripts\check_local.ps1
 ```
 
-Kết quả verify trong phiên hoàn thiện:
+Latest verified local state:
 
 ```text
-Backend pytest: 7 passed
-Frontend lint: passed
-Frontend build: passed
-NPM audit moderate: 0 vulnerabilities
-Browser smoke: citation, sources, quote highlight và PDF viewer đều hiển thị
+BackendStatus      : ok
+OllamaModel        : llama3.2:3b
+LlmAvailable       : True
+ModelLoaded        : True
+VectorChunks       : 81
+FrontendStatusCode : 200
 ```
 
-## Quyết Định Kỹ Thuật Quan Trọng
+Browser verification covered:
 
-### Vì Sao Dùng Browser-Native PDF Viewer?
+- Desktop 1440px: 3-pane layout visible, no body scroll drift.
+- Query flow: answer streams, citations render, evidence panel updates, PDF iframe appears.
+- Source cards: selected state, score bar, quote/context controls and copy quote.
+- Page text preview: best-effort highlight does not crash.
+- Mobile 390px: tabs work for `Chat` and `Nguồn`.
 
-Plan ban đầu dùng `react-pdf`, nhưng quá trình verify trên Next.js dev gặp lỗi runtime từ `pdfjs-dist`:
+## Implementation Recap
 
-```text
-TypeError: Object.defineProperty called on non-object
-```
+- Monorepo setup: `backend/`, `frontend/`, `scripts/`, local-only gitignore.
+- Ingestion: PDF parsing, chunk metadata, local embeddings.
+- Retrieval: persistent ChromaDB, dense retrieval, lexical boost, cache invalidation.
+- Generation: Ollama client, strict-context prompt, streaming and degraded responses.
+- API: upload/status/files/delete, chat query/stream/export, source/PDF/page endpoints.
+- UI: command center shell, paper manager, chat workspace, evidence/PDF viewer, mobile tabs.
+- Reliability: source rehydration on stream `done`, viewport locked to `h-screen`, independent panel scroll.
+- Documentation: README portfolio, architecture map, implementation notes and screenshots.
 
-Sau khi thử alias legacy worker/build mà vẫn còn rủi ro, dự án chuyển sang browser-native iframe:
+## Technical Decisions
 
-- Giữ trải nghiệm visual PDF đúng mục tiêu.
-- Không thêm dependency phức tạp vào bundle frontend.
-- Tránh crash dev overlay và ổn định hơn trên máy local.
-- Vẫn hỗ trợ page anchor, zoom, open external.
-- Highlight đáng tin cậy vẫn nằm ở quote/context, đúng yêu cầu evidence-first.
-
-### Vì Sao Highlight Không Ép Overlay Trên PDF Canvas?
-
-PDF text layer có thể khác nhau theo trình duyệt, font, encoding và loại PDF. Vì vậy dự án chọn chiến lược an toàn:
-
-- Highlight bắt buộc trong quote/context, nơi text đã được backend kiểm soát.
-- PDF visual dùng để kiểm chứng trang và ngữ cảnh rộng.
-- Nếu cần pixel-perfect PDF highlight sau này, có thể bổ sung OCR/text-layer mapping như một milestone riêng.
-
-### Vì Sao Vẫn Trả Sources Khi Ollama Offline?
-
-Workflow nghiên cứu cần nguồn trước tiên. Khi Ollama chưa chạy hoặc model chưa load, API degrade bằng cách giữ retrieved sources để user vẫn đọc được evidence, thay vì crash hoặc trả lỗi trống.
-
-## Recap Quá Trình Thực Hiện
-
-### Milestone 1 - Evidence Source Contract
-
-- Thêm schema source giàu metadata: `citation_id`, `chunk_id`, `file_id`, `quote`, `context`, `highlight_ranges`, `pdf_url`, `page_text_url`.
-- Thêm document resolver để serve PDF/page text an toàn trong `backend/data/papers`.
-- Cập nhật chat query/stream để frontend nhận được sources tương thích citation.
-
-### Milestone 2 - Research Cockpit Layout
-
-- Refactor UI thành 3 pane desktop: Paper Library, Chat Workspace, Evidence Viewer.
-- Mobile/tablet chuyển sang tab để tránh overflow.
-- Citation click chọn source và cập nhật evidence panel.
-
-### Milestone 3 - PDF Viewer Và Highlight
-
-- Thêm source cards, highlighted quote/context, copy quote, context expansion.
-- Chuyển PDF visual sang browser-native iframe sau khi phát hiện lỗi `pdfjs-dist`.
-- Giữ đúng mục tiêu: xem trực tiếp paper quan trọng ở nửa UI, không cần mở thủ công.
-
-### Milestone 4 - UI Polish Song Ngữ
-
-- Dùng palette lạnh/pastel: nền xanh rất nhạt, surface trắng, border xanh xám, primary teal.
-- Copy UI ưu tiên tiếng Việt, giữ thuật ngữ English cần thiết như `Evidence`, `Chunk`, `Model`.
-- Tối ưu empty state, status badge, upload zone, message bubbles và independent scrolling.
-
-### Milestone 5 - Retrieval Và Reliability
-
-- Dense retrieval kết hợp lexical boost để tăng khả năng bắt term user hỏi.
-- Lọc references mặc định, giảm lặp chunks cùng page.
-- Cache được invalidate khi ingest/delete.
-- Streaming gửi lại `sources` khi `done` để UI luôn rehydrate được evidence state.
-
-### Milestone 6 - Docs, Tests, Screenshots
-
-- Bổ sung backend tests cho source contract, highlight ranges, PDF/page endpoint và offline/degraded paths.
-- Capture desktop/mobile screenshots vào `docs/assets/screenshots`.
-- Viết lại README thành tài liệu tổng quan, diễn giải UI, API, setup, test và các quyết định kỹ thuật.
+- Browser-native PDF viewer replaced `react-pdf` after `pdfjs-dist` caused Next.js dev runtime instability.
+- Highlight is guaranteed in quote/context/page text preview, not as pixel-perfect PDF canvas overlay.
+- Ollama offline is degraded, not fatal: retrieved sources remain available for inspection.
+- No paid API key is required; all core components run locally.
 
 ## Data Safety
 
-Không commit dữ liệu cá nhân hoặc artifact local:
+Never commit private/local artifacts:
 
 ```text
 .env
@@ -365,25 +271,24 @@ backend/chroma_db/*
 .local/
 logs/
 tasks/
+tasks/phase-*.md
 frontend/node_modules/
 frontend/.next/
 ```
 
-`.gitignore` đã bảo vệ các vùng trên. Khi commit, luôn stage explicit từng file cần đưa lên repo.
+Commit workflow uses explicit staging only. Do not use `git add .`.
 
-## Tài Liệu Liên Quan
+## Project Docs
 
-- `SETUP.md`: hướng dẫn cài/chạy thực dụng.
-- `docs/ARCHITECTURE.md`: bản đồ kiến trúc ngắn cho agent/session mới.
-- `docs/implement-notes.html`: nhật ký triển khai theo card HTML, mới nhất ở trên.
-- `AGENTS.md`: luật làm việc bắt buộc cho các phiên Codex/agent trong repo.
+- `SETUP.md`: practical install/run guide.
+- `docs/ARCHITECTURE.md`: compact architecture map for future sessions.
+- `docs/implement-notes.html`: Vietnamese implementation log, newest cards first.
+- `AGENTS.md`: repository rules for Codex/agent sessions.
 
-## Định Hướng Tiếp Theo
+## Next Ideas
 
-Những việc có thể phát triển tiếp mà vẫn giữ local/free:
-
-- OCR cho scanned PDF bằng Tesseract hoặc pipeline local tương đương.
-- Reranker local nhỏ để cải thiện ranking trên bộ paper lớn.
-- Semantic section detection tốt hơn cho `Method`, `Experiment`, `Conclusion`.
-- PDF highlight overlay chuẩn text-layer nếu cần độ chính xác thị giác cao hơn.
-- Multi-session workspace và tagging paper theo project nghiên cứu.
+- OCR for scanned PDFs with a local OCR pipeline.
+- Local reranker for larger paper collections.
+- Better section detection for Method, Experiments and Conclusion.
+- Optional PDF text-layer overlay if pixel-level highlight becomes necessary.
+- Paper tags and multi-project research workspaces.
