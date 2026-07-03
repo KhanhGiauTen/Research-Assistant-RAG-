@@ -76,8 +76,8 @@ export function AppShell() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-transparent text-[var(--foreground)]">
-      <header className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--surface-glass)] shadow-[0_14px_40px_rgba(23,50,77,0.08)] backdrop-blur-xl">
+    <main className="flex h-screen overflow-hidden flex-col bg-transparent text-[var(--foreground)]">
+      <header className="z-20 shrink-0 border-b border-[var(--border)] bg-[var(--surface-glass)] shadow-[0_14px_40px_rgba(23,50,77,0.08)] backdrop-blur-xl">
         <div className="flex flex-col gap-3 px-4 py-3 lg:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
@@ -130,7 +130,7 @@ export function AppShell() {
         </div>
       </header>
 
-      <nav className="grid grid-cols-3 border-b border-[var(--border)] bg-[var(--surface-glass)] text-sm shadow-sm backdrop-blur lg:hidden">
+      <nav className="grid shrink-0 grid-cols-3 border-b border-[var(--border)] bg-[var(--surface-glass)] text-sm shadow-sm backdrop-blur lg:hidden">
         {[
           ["papers", "Papers"],
           ["chat", "Chat"],
@@ -151,7 +151,7 @@ export function AppShell() {
         ))}
       </nav>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[310px_minmax(390px,0.9fr)_minmax(520px,1.2fr)]">
+      <div className="grid min-h-0 flex-1 overflow-hidden grid-cols-1 lg:grid-cols-[310px_minmax(390px,0.9fr)_minmax(520px,1.2fr)]">
         <div className={`${mobileTab === "papers" ? "flex" : "hidden"} min-h-0 lg:flex`}>
           <PaperManager papers={papers} />
         </div>

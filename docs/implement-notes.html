@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-03T22:47:51+07:00">2026-07-03 22:47:51 +07:00</time>
+          <time datetime="2026-07-03T22:56:12+07:00">2026-07-03 22:56:12 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,68 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-03T22:56:12+07:00">
+          <header>
+            <div>
+              <h2>Khóa viewport để các panel cockpit scroll độc lập</h2>
+              <div class="badges">
+                <span class="badge">ui</span>
+                <span class="badge">layout</span>
+                <span class="badge warning">browser-verify</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-03T22:56:12+07:00">2026-07-03 22:56:12 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Khi capture screenshot sau câu hỏi thật, hành vi auto-scroll của
+                chat có thể kéo body xuống, khiến desktop cockpit mất phần đầu
+                của Paper Library/Chat trong viewport.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Đặt root shell ở <code>h-screen overflow-hidden</code>.</li>
+                <li>Header và mobile tabs dùng <code>shrink-0</code>.</li>
+                <li>Grid 3-pane dùng <code>min-h-0 flex-1 overflow-hidden</code> để từng panel tự scroll độc lập.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>frontend/components/AppShell.tsx</code>: khóa viewport và vùng scroll nội bộ.</li>
+                <li><code>docs/implement-notes.html</code>: ghi nhận fix phát hiện qua browser verification.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                Cockpit giữ đúng cấu trúc first viewport trên desktop/mobile;
+                chat, library và evidence panel cuộn độc lập, phù hợp yêu cầu
+                show nguồn trực tiếp ở nửa UI.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <p>
+                Chạy <code>npm run lint</code>, sau đó capture lại screenshot
+                desktop/mobile cho README.
+              </p>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-03T22:47:51+07:00">
           <header>
             <div>
