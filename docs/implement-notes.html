@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-03T22:40:33+07:00">2026-07-03 22:40:33 +07:00</time>
+          <time datetime="2026-07-03T22:43:32+07:00">2026-07-03 22:43:32 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,69 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-03T22:43:32+07:00">
+          <header>
+            <div>
+              <h2>Polish Paper Library và Chat Workspace</h2>
+              <div class="badges">
+                <span class="badge">ui</span>
+                <span class="badge">paper-library</span>
+                <span class="badge">chat</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-03T22:43:32+07:00">2026-07-03 22:43:32 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                Sau khi shell có command bar, hai workflow chính là quản lý paper
+                và hỏi đáp cần được nâng cấp để user thấy rõ trạng thái local,
+                scope truy vấn và nguồn kiểm chứng.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Paper Library hiển thị stats, upload zone local/private, search rõ hơn, job/error card dễ đọc.</li>
+                <li>Paper cards có title, filename, chunk count và trạng thái PDF ready/text only.</li>
+                <li>Chat empty state có research starter prompts để user bắt đầu nhanh.</li>
+                <li>Assistant message có evidence ribbon, citation chip nổi bật và role avatar.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>frontend/components/papers/*</code>: polish upload zone, manager, list/card states.</li>
+                <li><code>frontend/components/chat/*</code>: polish header, empty state, message bubble và input bar.</li>
+                <li><code>docs/implement-notes.html</code>: ghi nhận cụm paper/chat UI.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                UI dễ vào việc hơn: user có thể nhìn thấy paper đã index, chọn
+                scope, thử prompt mẫu và mở evidence từ chính answer bubble.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <p>
+                Chạy <code>npm run lint</code> trước khi commit. Browser verify
+                desktop/mobile sẽ chạy ở cụm screenshot cuối.
+              </p>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-03T22:40:33+07:00">
           <header>
             <div>
