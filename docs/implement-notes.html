@@ -155,7 +155,7 @@
         <h1>Nhật ký triển khai</h1>
         <p>
           Cập nhật gần nhất:
-          <time datetime="2026-07-02T15:43:38+07:00">2026-07-02 15:43:38 +07:00</time>
+          <time datetime="2026-07-03T22:40:33+07:00">2026-07-03 22:40:33 +07:00</time>
           · Người note: <strong>KhanhGiauTen</strong>
         </p>
         <p>
@@ -166,6 +166,69 @@
       </header>
 
       <section class="notes" aria-label="Danh sách note triển khai">
+        <article class="note-card" data-time="2026-07-03T22:40:33+07:00">
+          <header>
+            <div>
+              <h2>Refresh shell thành research command center</h2>
+              <div class="badges">
+                <span class="badge">ui</span>
+                <span class="badge">shell</span>
+                <span class="badge">visual-system</span>
+              </div>
+            </div>
+            <div class="note-meta">
+              <span>Thời gian: <time datetime="2026-07-03T22:40:33+07:00">2026-07-03 22:40:33 +07:00</time></span>
+              <span>Người note: <strong>KhanhGiauTen</strong></span>
+            </div>
+          </header>
+
+          <div class="note-body">
+            <section class="note-section">
+              <h3>Bối cảnh</h3>
+              <p>
+                User yêu cầu nâng UI theo hướng command center chuyên nghiệp,
+                ưu tiên trust/evidence và vẫn giữ local/free RAG workflow hiện có.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Quyết định</h3>
+              <ul>
+                <li>Giữ bố cục 3-pane nhưng nâng header thành command bar có status, runtime, papers, chunks và active sources.</li>
+                <li>Bổ sung token visual cho surface layering, border mạnh hơn, focus state và scrollbar để toàn UI nhìn đồng bộ hơn.</li>
+                <li>Không thêm UI framework hoặc dependency mới.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>File đã chạm</h3>
+              <ul>
+                <li><code>frontend/app/globals.css</code>: thêm visual tokens, background layering, focus và scrollbar.</li>
+                <li><code>frontend/components/AppShell.tsx</code>: command bar, metric pills, mobile tab active state, layout ratio mới.</li>
+                <li><code>frontend/components/ui/StatusBadge.tsx</code>: trạng thái local runtime hiển thị rõ model và status.</li>
+                <li><code>docs/implement-notes.html</code>: ghi nhận thay đổi shell UI.</li>
+              </ul>
+            </section>
+
+            <section class="note-section">
+              <h3>Tác động</h3>
+              <p>
+                First viewport có cảm giác sản phẩm hoàn thiện hơn, nhấn mạnh
+                local/private runtime và giúp user thấy ngay số paper/chunk/source
+                đang hoạt động.
+              </p>
+            </section>
+
+            <section class="note-section">
+              <h3>Kiểm thử/xác minh</h3>
+              <p>
+                Chạy <code>npm run lint</code> trước khi commit; browser screenshot
+                sẽ được capture lại ở cụm README cuối.
+              </p>
+            </section>
+          </div>
+        </article>
+
         <article class="note-card" data-time="2026-07-02T15:43:38+07:00">
           <header>
             <div>

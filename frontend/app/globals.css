@@ -5,12 +5,16 @@
 :root {
   --background: #f6fafd;
   --surface: #ffffff;
+  --surface-raised: #fbfdff;
   --surface-muted: #eef7fa;
+  --surface-glass: rgba(255, 255, 255, 0.86);
   --border: #d7e7ef;
+  --border-strong: #b8d2df;
   --foreground: #17324d;
   --muted: #62748a;
   --accent: #2f80a7;
   --accent-strong: #256b8d;
+  --accent-soft: #e4f7fb;
   --accent-cyan: #bdecf4;
   --accent-indigo: #dde7ff;
   --accent-mint: #ddf7ea;
@@ -27,7 +31,9 @@
 
 body {
   margin: 0;
-  background: var(--background);
+  background:
+    radial-gradient(circle at top left, rgba(189, 236, 244, 0.48), transparent 34rem),
+    linear-gradient(135deg, #f6fafd 0%, #eef7fa 48%, #f7fbff 100%);
   color: var(--foreground);
   font-family: Inter, Arial, Helvetica, sans-serif;
 }
@@ -42,4 +48,44 @@ select {
 ::selection {
   background: var(--accent-cyan);
   color: var(--foreground);
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bed8e5;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8fb7c9;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }

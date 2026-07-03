@@ -6,9 +6,9 @@ import { api } from "@/lib/api";
 import type { SystemHealth } from "@/lib/types";
 
 const statusStyles: Record<SystemHealth["status"], string> = {
-  ready: "bg-green-100 text-green-800 ring-green-200",
-  degraded: "bg-amber-100 text-amber-800 ring-amber-200",
-  unavailable: "bg-red-100 text-red-800 ring-red-200",
+  ready: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  degraded: "border-amber-200 bg-amber-50 text-amber-800",
+  unavailable: "border-red-200 bg-red-50 text-red-800",
 };
 
 export function StatusBadge() {
@@ -45,18 +45,25 @@ export function StatusBadge() {
 
   const status = health?.status ?? "degraded";
   const label = status === "ready" ? "Ready" : status === "degraded" ? "Degraded" : "Offline";
+  const detail = health
+    ? `${health.llm.model} · ${health.vector_store.files} files · ${health.vector_store.total_chunks} chunks`
+    : "Checking local runtime";
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ring-1 ${statusStyles[status]}`}
-      title={
-        health
-          ? `${health.llm.model} | ${health.vector_store.files} files | ${health.vector_store.total_chunks} chunks`
-          : "Checking system status"
-      }
+      className={`inline-flex h-10 min-w-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold shadow-sm ${statusStyles[status]}`}
+      title={detail}
     >
-      <span className="h-2 w-2 rounded-full bg-current" />
-      {label}
+      <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-20" />
+        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-current" />
+      </span>
+      <span className="leading-tight">
+        <span className="block">{label}</span>
+        <span className="hidden max-w-40 truncate font-normal opacity-80 sm:block">
+          {health?.llm.model ?? "checking"}
+        </span>
+      </span>
     </span>
   );
 }
